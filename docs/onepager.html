@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEOMA 처마 — Technical One-Pager (GASOK)</title>
+<style>
+  :root{
+    --bg:#141210;
+    --roof:#26221d;
+    --roof-2:#2e2922;
+    --paper:#e8e0d0;
+    --paper-dim:#b8ae9a;
+    --teal:#1fb6a3;
+    --verm:#e0523a;
+    --gold:#d9a441;
+    --line:#3a342b;
+    --mono:ui-monospace,"Cascadia Code","SF Mono",Consolas,Menlo,monospace;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",Roboto,sans-serif;
+  }
+  .sheet{max-width:1060px;margin:0 auto;padding:34px 30px 26px}
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom:2px solid var(--gold);
+    padding-bottom:18px;margin-bottom:22px;
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:16px 28px;
+  }
+  .brand{display:flex;align-items:baseline;gap:14px}
+  .brand h1{font-size:38px;letter-spacing:.06em;font-weight:800;color:var(--paper)}
+  .brand .hangul{font-size:30px;color:var(--gold);font-weight:600}
+  .brand .badge{
+    font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    border:1px solid var(--teal);color:var(--teal);
+    padding:3px 9px;border-radius:3px;white-space:nowrap;
+  }
+  .tagline{flex:1 1 100%;color:var(--paper-dim);font-size:15.5px}
+  .tagline b{color:var(--paper);font-weight:600}
+  .links{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:13px}
+  .links a{color:var(--teal);text-decoration:none;border-bottom:1px dotted var(--teal)}
+  .links .lbl{color:var(--paper-dim);margin-right:4px}
+
+  /* ---------- grid ---------- */
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:20px 26px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  section{
+    background:var(--roof);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:16px 18px 15px;
+    break-inside:avoid;
+  }
+  h2{
+    font-size:12px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--gold);margin-bottom:10px;display:flex;align-items:center;gap:8px;
+  }
+  h2::before{content:"";width:8px;height:8px;background:var(--verm);border-radius:2px;transform:rotate(45deg);flex:none}
+  ul{list-style:none}
+  ul li{
+    padding-left:16px;position:relative;margin-bottom:7px;
+    font-size:13.8px;line-height:1.45;color:var(--paper);
+  }
+  ul li::before{content:"▸";position:absolute;left:0;color:var(--teal);font-size:12px;top:1px}
+  ul li b{color:var(--gold);font-weight:600}
+  code{font-family:var(--mono);font-size:12.2px;color:var(--teal);background:#1b1815;padding:1px 5px;border-radius:3px;word-break:break-all}
+  .dim{color:var(--paper-dim)}
+  .small{font-size:12.5px}
+
+  svg{display:block;width:100%;height:auto}
+  svg text{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+  svg .mono{font-family:var(--mono)}
+
+  /* struct table */
+  table.slot{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.8px;margin:8px 0 6px}
+  table.slot th{
+    text-align:left;color:var(--paper-dim);font-weight:500;font-size:10.5px;
+    letter-spacing:.08em;text-transform:uppercase;padding:2px 8px 4px 0;border-bottom:1px solid var(--line);
+  }
+  table.slot td{padding:5px 8px 5px 0;border-bottom:1px solid var(--line);color:var(--paper)}
+  table.slot td.t{color:var(--teal)}
+  table.slot td.g{color:var(--gold)}
+
+  /* deployment box */
+  .deploy{border:1px solid var(--gold);background:var(--roof-2)}
+  .kv{display:grid;grid-template-columns:96px 1fr;gap:6px 12px;font-size:13px}
+  .kv .k{color:var(--paper-dim);font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+  .kv .v{font-family:var(--mono);font-size:12.3px;word-break:break-all}
+  .kv .v a{color:var(--teal);text-decoration:none}
+  .ok{color:var(--teal);font-weight:700}
+
+  /* roadmap */
+  .roadmap{margin-top:20px;break-inside:avoid}
+  .road-steps{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:4px}
+  @media(max-width:820px){.road-steps{grid-template-columns:1fr 1fr}}
+  .step{
+    background:var(--roof-2);border:1px solid var(--line);border-top:3px solid var(--teal);
+    border-radius:6px;padding:10px 12px;font-size:12.6px;line-height:1.4;
+  }
+  .step:nth-child(2){border-top-color:var(--gold)}
+  .step:nth-child(3){border-top-color:var(--verm)}
+  .step:nth-child(4){border-top-color:var(--paper-dim)}
+  .step .when{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);display:block;margin-bottom:4px}
+  .step:first-child .when{color:var(--teal)}
+
+  footer{
+    margin-top:20px;padding-top:12px;border-top:1px solid var(--line);
+    display:flex;flex-wrap:wrap;gap:6px 22px;justify-content:space-between;
+    font-size:12.3px;color:var(--paper-dim);
+  }
+  footer a{color:var(--teal);text-decoration:none}
+  footer .glyph{color:var(--gold)}
+
+  /* ---------- print: A4, light paper, stacked ---------- */
+  @page{size:A4;margin:9mm}
+  @media print{
+    :root{
+      --bg:#ffffff;--roof:#faf6ec;--roof-2:#f3ecdc;--paper:#221d16;
+      --paper-dim:#6d6353;--line:#d8cfba;--teal:#0e8878;--verm:#c23e28;--gold:#a2751f;
+    }
+    body{font-size:11.5px}
+    .sheet{max-width:none;padding:0}
+    .grid{grid-template-columns:1fr;gap:10px}
+    section{padding:10px 12px;border-radius:4px}
+    header{padding-bottom:10px;margin-bottom:12px}
+    .brand h1{font-size:26px}.brand .hangul{font-size:21px}
+    .road-steps{grid-template-columns:repeat(4,1fr);gap:8px}
+    ul li{margin-bottom:4px;font-size:11.3px}
+    a{color:var(--teal)!important}
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <!-- ================= HEADER ================= -->
+  <header>
+    <div class="brand">
+      <h1>CHEOMA</h1>
+      <span class="hangul">처마</span>
+      <span class="badge">GASOK · GIWA-Native Ideas</span>
+    </div>
+    <p class="tagline">
+      <b>Lay a tile. Make a wish. Raise the roof — together.</b>
+      &nbsp;Digital <i>giwa-bulsa</i> (기와불사): a communal 64×32 roof of 2,048 wish-inscribed tiles,
+      each a fully on-chain ERC-721 on GIWA Sepolia. One tile is fragile; together they make a roof.
+    </p>
+    <nav class="links">
+      <span><span class="lbl">Live dApp</span><a href="https://izzetcakmak.github.io/cheoma/">izzetcakmak.github.io/cheoma</a></span>
+      <span><span class="lbl">Contract (verified)</span><a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e">0xc62a…ec2e ↗</a></span>
+      <span><span class="lbl">Repo</span><a href="https://github.com/izzetcakmak/cheoma">github.com/izzetcakmak/cheoma</a></span>
+    </nav>
+  </header>
+
+  <div class="grid">
+
+    <!-- ================= THE PRODUCT ================= -->
+    <section>
+      <h2>The Product</h2>
+      <ul>
+        <li><b>Claim a tile.</b> Pick any empty cell on a shared 64×32 roof — 2,048 tiles, one canvas for the whole community.</li>
+        <li><b>Glaze &amp; inscribe.</b> Choose a glaze color (<code>uint24</code> RGB) and ink a wish (≤ 140 bytes), exactly as donors ink wishes on temple roof tiles before a hall is raised.</li>
+        <li><b>Fully on-chain NFT.</b> Each tile mints as an ERC-721 whose <i>sumaksae</i> (수막새) petal art and JSON metadata are generated inside the contract — no IPFS, no server.</li>
+        <li><b>Optional donation.</b> Any ETH sent with <code>layTile</code> is forwarded atomically to a public <code>roofFund</code> — the on-chain analogue of a temple tile donation.</li>
+        <li><b>The roof rises together.</b> Live shared canvas; a <code>RoofMilestone</code> event fires every 256 tiles; max 16 tiles per wallet keeps the roof plural.</li>
+      </ul>
+    </section>
+
+    <!-- ================= ARCHITECTURE ================= -->
+    <section>
+      <h2>Architecture — no backend, no IPFS, no indexer</h2>
+      <svg viewBox="0 0 470 336" role="img" aria-label="Architecture diagram: wallet to static frontend to GIWA RPCs to Cheoma contract, events and views returning to the UI">
+        <defs>
+          <marker id="arr" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L8 4 L0 8 z" fill="#1fb6a3"/>
+          </marker>
+          <marker id="arrG" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto">
+            <path d="M0 0 L8 4 L0 8 z" fill="#d9a441"/>
+          </marker>
+        </defs>
+        <!-- user/wallet -->
+        <rect x="110" y="6" width="250" height="42" rx="6" fill="#2e2922" stroke="#3a342b"/>
+        <text x="235" y="24" text-anchor="middle" fill="#e8e0d0" font-size="13" font-weight="600">User · GIWA Wallet / MetaMask</text>
+        <text x="235" y="40" text-anchor="middle" fill="#b8ae9a" font-size="10">signs layTile(id, color, wish) · optional ETH</text>
+        <line x1="235" y1="48" x2="235" y2="66" stroke="#1fb6a3" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- frontend -->
+        <rect x="85" y="68" width="300" height="46" rx="6" fill="#2e2922" stroke="#1fb6a3"/>
+        <text x="235" y="87" text-anchor="middle" fill="#e8e0d0" font-size="13" font-weight="600">docs/index.html — static frontend</text>
+        <text x="235" y="104" text-anchor="middle" fill="#b8ae9a" font-size="10">single file · ethers v6 · GitHub Pages · zero server code</text>
+        <line x1="160" y1="114" x2="120" y2="140" stroke="#1fb6a3" stroke-width="1.6" marker-end="url(#arr)"/>
+        <line x1="310" y1="114" x2="350" y2="140" stroke="#1fb6a3" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- rpcs -->
+        <rect x="18" y="142" width="204" height="52" rx="6" fill="#2e2922" stroke="#3a342b"/>
+        <text x="120" y="161" text-anchor="middle" fill="#e8e0d0" font-size="12" font-weight="600">GIWA Sepolia RPC</text>
+        <text x="120" y="177" text-anchor="middle" fill="#b8ae9a" font-size="10">sepolia-rpc.giwa.io · 1s blocks</text>
+        <text x="120" y="189" text-anchor="middle" fill="#b8ae9a" font-size="10">tx submit + confirmed reads</text>
+        <rect x="248" y="142" width="204" height="52" rx="6" fill="#2e2922" stroke="#3a342b"/>
+        <text x="350" y="161" text-anchor="middle" fill="#e8e0d0" font-size="12" font-weight="600">Flashblocks RPC</text>
+        <text x="350" y="177" text-anchor="middle" fill="#b8ae9a" font-size="10">sepolia-rpc-flashblocks.giwa.io</text>
+        <text x="350" y="189" text-anchor="middle" fill="#b8ae9a" font-size="10">~200ms preconf via pending tag</text>
+        <line x1="120" y1="194" x2="200" y2="222" stroke="#1fb6a3" stroke-width="1.6" marker-end="url(#arr)"/>
+        <line x1="350" y1="194" x2="270" y2="222" stroke="#1fb6a3" stroke-width="1.6" marker-end="url(#arr)"/>
+        <!-- contract -->
+        <rect x="85" y="224" width="300" height="52" rx="6" fill="#2e2922" stroke="#e0523a"/>
+        <text x="235" y="243" text-anchor="middle" fill="#e8e0d0" font-size="13" font-weight="600">Cheoma.sol — verified, fully on-chain</text>
+        <text x="235" y="260" text-anchor="middle" fill="#b8ae9a" font-size="10" class="mono">0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e</text>
+        <text x="235" y="271" text-anchor="middle" fill="#b8ae9a" font-size="10">state + SVG art + metadata all in one contract</text>
+        <!-- return arrow -->
+        <path d="M 385 250 C 448 250 448 91 388 91" fill="none" stroke="#d9a441" stroke-width="1.6" stroke-dasharray="4 3" marker-end="url(#arrG)"/>
+        <text x="452" y="168" text-anchor="middle" fill="#d9a441" font-size="9.5" transform="rotate(-90 452 168)">TileLaid events · getRange views</text>
+        <!-- caption -->
+        <rect x="85" y="296" width="300" height="26" rx="13" fill="none" stroke="#d9a441"/>
+        <text x="235" y="313" text-anchor="middle" fill="#d9a441" font-size="11.5" font-weight="600">no backend · no IPFS · no indexer</text>
+      </svg>
+      <p class="small dim" style="margin-top:8px">
+        The UI paints all 2,048 tiles with a few batched <code>getRange(start,count)</code> calls and
+        keeps them live from <code>TileLaid</code> events — the chain itself is the database and the CDN.
+      </p>
+    </section>
+
+    <!-- ================= CONTRACT INTERNALS ================= -->
+    <section>
+      <h2>Contract Internals</h2>
+      <ul>
+        <li><b>Zero-dependency ERC-721.</b> Minimal implementation written from scratch in a single file — no OpenZeppelin import in production bytecode, every line auditable in one sitting.</li>
+        <li><b>One storage slot per tile.</b> The hot fields of <code>Tile</code> pack into 31 bytes — a single SSTORE covers giver, glaze and timestamp:</li>
+      </ul>
+      <table class="slot">
+        <tr><th>field</th><th>type</th><th>bytes</th><th>slot</th></tr>
+        <tr><td class="g">giver</td><td class="t">address</td><td>20</td><td rowspan="3">slot 0 (31 / 32 B)</td></tr>
+        <tr><td class="g">color</td><td class="t">uint24</td><td>3</td></tr>
+        <tr><td class="g">laidAt</td><td class="t">uint64</td><td>8</td></tr>
+        <tr><td class="g">wish</td><td class="t">string</td><td>≤140</td><td>slot 1+</td></tr>
+      </table>
+      <ul>
+        <li><b>On-chain art.</b> <code>tileSVG(id)</code> draws a <i>sumaksae</i> end-cap — 6–8 petals deterministically seeded by tile id, filled with the giver's glaze — and <code>tokenURI</code> wraps it as base64 JSON data URI. Marketplaces render it with zero external fetches.</li>
+        <li><b>Invariants.</b> One giver per tile, forever — the original giver record survives NFT transfers. Wish ≤ 140 bytes, id &lt; 2048, ≤ 16 tiles per wallet, donations pass through in the same tx.</li>
+        <li><b>Cost.</b> ~160k gas per <code>layTile</code> — cents on an L2, dominated by the wish string.</li>
+      </ul>
+    </section>
+
+    <!-- ================= WHY GIWA ================= -->
+    <section>
+      <h2>Why GIWA — technically</h2>
+      <p class="small" style="margin-bottom:10px">
+        A communal canvas dies when feedback is slow. Time from click to <i>seeing your tile on the roof</i>:
+      </p>
+      <svg viewBox="0 0 470 132" role="img" aria-label="Latency comparison: Ethereum L1 12 seconds, GIWA 1 second, Flashblocks preconfirmation 0.2 seconds">
+        <!-- L1 -->
+        <text x="0" y="18" fill="#b8ae9a" font-size="11">Ethereum L1</text>
+        <rect x="110" y="6" width="348" height="16" rx="3" fill="#3a342b"/>
+        <text x="452" y="18" text-anchor="end" fill="#e8e0d0" font-size="11" class="mono">~12 s</text>
+        <!-- GIWA -->
+        <text x="0" y="52" fill="#b8ae9a" font-size="11">GIWA block</text>
+        <rect x="110" y="40" width="29" height="16" rx="3" fill="#1fb6a3"/>
+        <text x="147" y="52" fill="#1fb6a3" font-size="11" class="mono">1 s</text>
+        <!-- preconf -->
+        <text x="0" y="86" fill="#b8ae9a" font-size="11">Flashblocks preconf</text>
+        <rect x="110" y="74" width="6" height="16" rx="2" fill="#d9a441"/>
+        <text x="124" y="86" fill="#d9a441" font-size="11" class="mono">~0.2 s</text>
+        <line x1="110" y1="98" x2="110" y2="2" stroke="#3a342b" stroke-width="1"/>
+        <text x="110" y="112" fill="#b8ae9a" font-size="9.5">click</text>
+        <text x="0" y="128" fill="#b8ae9a" font-size="10">CHEOMA reads the <tspan class="mono" fill="#d9a441">pending</tspan> tag on the Flashblocks RPC — your tile appears before you lift your finger.</text>
+      </svg>
+      <ul style="margin-top:10px">
+        <li><b>Cultural DNA.</b> GIWA is named after the roof tile; CHEOMA turns the chain's own metaphor into its first communal ritual.</li>
+        <li><b>Consumer-simple.</b> One tx, three inputs — a natural GIWA Wallet mini-app surface (Q3 2026, with Dojang attestations for verified givers).</li>
+      </ul>
+    </section>
+
+    <!-- ================= SECURITY ================= -->
+    <section>
+      <h2>Security Posture</h2>
+      <ul>
+        <li><b>No admin keys.</b> No owner-only functions that touch tiles, art or funds. Nobody can edit, censor or reassign a laid tile — including the deployer.</li>
+        <li><b>No upgradability.</b> Plain immutable contract — no proxy, no delegatecall surface, what you verified is what runs forever.</li>
+        <li><b>No custody.</b> The contract holds zero ETH: donations forward atomically to the public <code>roofFund</code> inside <code>layTile</code>; the tx reverts if the transfer fails.</li>
+        <li><b>Bounded state.</b> Hard caps everywhere — 2,048 tiles, 140-byte wishes, 16 tiles per wallet — no unbounded loops, no griefing surface.</li>
+        <li><b>Tested.</b> Full Foundry suite, <b>14 tests</b>: mint rules, double-lay rejection, wish-length limits, per-wallet cap, donation forwarding, transfer-vs-giver invariant, tokenURI/SVG output.</li>
+      </ul>
+    </section>
+
+    <!-- ================= DEPLOYMENT ================= -->
+    <section class="deploy">
+      <h2>Verified Deployment</h2>
+      <div class="kv">
+        <span class="k">Contract</span>
+        <span class="v"><a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e">0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e</a> <span class="ok">✓ verified</span></span>
+        <span class="k">Network</span>
+        <span class="v">GIWA Sepolia — chainId 91342 (0x164ce) · OP Stack L2 by Upbit/Dunamu</span>
+        <span class="k">Compiler</span>
+        <span class="v">solc 0.8.24</span>
+        <span class="k">RPC</span>
+        <span class="v">sepolia-rpc.giwa.io · sepolia-rpc-flashblocks.giwa.io</span>
+        <span class="k">Explorer</span>
+        <span class="v"><a href="https://sepolia-explorer.giwa.io">sepolia-explorer.giwa.io</a></span>
+      </div>
+      <p class="small dim" style="margin-top:10px">
+        Source, Foundry tests and deploy scripts: <a style="color:var(--teal);text-decoration:none" href="https://github.com/izzetcakmak/cheoma">github.com/izzetcakmak/cheoma</a> — read <code>tokenURI(0)</code> on the explorer to see art rendered live from chain state.
+      </p>
+    </section>
+
+  </div><!-- /grid -->
+
+  <!-- ================= ROADMAP ================= -->
+  <section class="roadmap">
+    <h2>Roadmap</h2>
+    <div class="road-steps">
+      <div class="step">
+        <span class="when">Now</span>
+        Testnet MVP <b>live</b>: verified contract, on-chain art, static dApp on GitHub Pages.
+      </div>
+      <div class="step">
+        <span class="when">Q3 2026</span>
+        GIWA Wallet mini-app · Dojang (EAS) verified-giver badges · Korean temple &amp; brand collab pilots — an on-chain tile mirrors a physical <i>giwa-bulsa</i> donation.
+      </div>
+      <div class="step">
+        <span class="when">Mainnet</span>
+        Paid donation tiles. Revenue: small protocol fee on donations, collab roofs for brands/communities, seasonal themed roofs.
+      </div>
+      <div class="step">
+        <span class="when">Platform</span>
+        Multi-roof: any community deploys and raises its own roof — schools, DAOs, temples, cities.
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= FOOTER ================= -->
+  <footer>
+    <span><span class="glyph">처마</span> · built by <b style="color:var(--paper)">Izzet Cakmak</b> — solo builder, Turkey. Prior on-chain SVG work: Hoodlings (4,663 fully on-chain NFTs, Robinhood Chain mainnet), Morsu, Hurrian AI, ENTARC.</span>
+    <span>
+      <a href="https://github.com/izzetcakmak">github.com/izzetcakmak</a> ·
+      <a href="https://x.com/izzetcakmak35">@izzetcakmak35</a> ·
+      <a href="mailto:izzetcakmak35700@gmail.com">izzetcakmak35700@gmail.com</a>
+    </span>
+  </footer>
+
+</div>
+</body>
+</html>
