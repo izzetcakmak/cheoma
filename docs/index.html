@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEOMA 처마 — Lay a tile. Make a wish. Raise the roof.</title>
+<meta name="description" content="CHEOMA — a digital giwa-bulsa on GIWA Sepolia. Claim a tile on a shared 64x32 roof, ink your wish, fully on-chain.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Ccircle%20cx='16'%20cy='16'%20r='14'%20fill='%2326221d'%20stroke='%23d9a441'%20stroke-width='2'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='4'%20fill='%231fb6a3'/%3E%3C/svg%3E">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.13.2/ethers.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#141210; --roof:#26221d; --paper:#e8e0d0; --teal:#1fb6a3;
+    --verm:#e0523a; --gold:#d9a441; --dim:#8f8574; --card:#1c1916;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg); color:var(--paper);
+    font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    line-height:1.6; -webkit-font-smoothing:antialiased;
+    background-image:radial-gradient(ellipse 90% 50% at 50% -10%, rgba(31,182,163,0.05), transparent 60%);
+    min-height:100vh;
+  }
+  a{color:var(--teal); text-decoration:none}
+  a:hover{color:var(--gold)}
+  .wrap{max-width:1040px; margin:0 auto; padding:0 18px}
+
+  /* ---------- header ---------- */
+  header{display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; padding:18px 0}
+  .wordmark{display:flex; align-items:baseline; gap:10px}
+  .wordmark .en{font-family:Georgia,'Times New Roman',serif; font-size:1.5rem; letter-spacing:0.22em; font-weight:700; color:var(--paper)}
+  .wordmark .ko{color:var(--gold); font-size:1.15rem; font-weight:600}
+  .hdr-right{display:flex; align-items:center; gap:14px; flex-wrap:wrap}
+  .lang{display:flex; gap:2px; border:1px solid rgba(232,224,208,0.15); border-radius:8px; overflow:hidden}
+  .lang button{background:transparent; border:0; color:var(--dim); font-size:0.78rem; padding:5px 10px; cursor:pointer; font-family:inherit}
+  .lang button.on{background:rgba(217,164,65,0.12); color:var(--gold)}
+  .btn{
+    background:var(--teal); color:#0c1a18; border:0; border-radius:9px;
+    font-weight:700; font-size:0.88rem; padding:9px 18px; cursor:pointer; font-family:inherit;
+    transition:transform .12s, opacity .12s;
+  }
+  .btn:hover{transform:translateY(-1px)}
+  .btn:disabled{opacity:0.45; cursor:not-allowed; transform:none}
+  .btn.ghost{background:transparent; color:var(--paper); border:1px solid rgba(232,224,208,0.25)}
+  #walletBox{display:flex; align-items:center; gap:8px}
+  #walletInfo{font-size:0.8rem; color:var(--dim); background:var(--card); border:1px solid rgba(232,224,208,0.1); border-radius:9px; padding:8px 12px; display:none}
+  #walletInfo b{color:var(--gold); font-weight:600}
+
+  /* ---------- hero ---------- */
+  .hero{text-align:center; padding:34px 0 10px}
+  .hero h1{font-family:Georgia,serif; font-size:clamp(1.5rem,4.4vw,2.5rem); font-weight:400; letter-spacing:0.02em; line-height:1.35}
+  .hero .explain{max-width:640px; margin:14px auto 0; color:var(--dim); font-size:0.95rem}
+  .stats{display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:28px 0 14px}
+  .stat{background:var(--card); border:1px solid rgba(232,224,208,0.09); border-radius:12px; padding:14px 26px; min-width:150px}
+  .stat .num{font-family:Georgia,serif; font-size:1.6rem; color:var(--gold)}
+  .stat .num small{font-size:0.9rem; color:var(--dim)}
+  .stat .lbl{font-size:0.75rem; color:var(--dim); letter-spacing:0.08em; text-transform:uppercase}
+  .hero-links{display:flex; justify-content:center; gap:22px; flex-wrap:wrap; font-size:0.85rem; margin-bottom:8px}
+  .hero-links a{border-bottom:1px dotted rgba(31,182,163,0.4); padding-bottom:1px}
+
+  /* ---------- roof ---------- */
+  .roof-sec{margin:26px 0 10px}
+  .hint{text-align:center; color:var(--dim); font-size:0.82rem; margin-bottom:14px}
+  .roof-wrap{position:relative; max-width:1000px; margin:0 auto}
+  .ridge, .eaves{display:block; width:100%; height:auto}
+  .roof-body{position:relative; background:var(--roof); padding:6px 10px; box-shadow:0 18px 50px rgba(0,0,0,0.5)}
+  canvas#roof{display:block; width:100%; height:auto; cursor:pointer; touch-action:manipulation}
+  #tooltip{
+    position:absolute; z-index:20; display:none; max-width:270px;
+    background:#0f0d0b; border:1px solid rgba(217,164,65,0.45); border-radius:10px;
+    padding:10px 13px; font-size:0.8rem; pointer-events:none; box-shadow:0 8px 26px rgba(0,0,0,0.6);
+  }
+  #tooltip .tt-meta{color:var(--gold); font-weight:600; margin-bottom:3px}
+  #tooltip .tt-wish{color:var(--paper); font-style:italic; word-break:break-word}
+  #tooltip .tt-date{color:var(--dim); font-size:0.7rem; margin-top:4px}
+
+  /* ---------- wish wall ---------- */
+  .wall-sec{margin:56px 0 30px}
+  h2.sec{font-family:Georgia,serif; font-weight:400; font-size:1.4rem; text-align:center}
+  h2.sec .hanja{color:var(--gold); font-size:0.95rem; margin-left:8px}
+  .sec-sub{text-align:center; color:var(--dim); font-size:0.85rem; margin:4px 0 22px}
+  #wall{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:12px}
+  .wall-item{background:var(--card); border:1px solid rgba(232,224,208,0.08); border-radius:11px; padding:13px 15px; display:flex; gap:12px; align-items:flex-start}
+  .wall-item .chip{width:26px; height:26px; border-radius:50%; flex-shrink:0; margin-top:2px; border:2px solid rgba(20,18,16,0.6); box-shadow:0 0 0 1px rgba(232,224,208,0.15)}
+  .wall-item .w-wish{font-size:0.88rem; font-style:italic; word-break:break-word}
+  .wall-item .w-meta{font-size:0.72rem; color:var(--dim); margin-top:4px}
+  .wall-empty{grid-column:1/-1; text-align:center; color:var(--dim); font-size:0.85rem; padding:24px}
+
+  /* ---------- modal ---------- */
+  #overlay{position:fixed; inset:0; background:rgba(10,9,7,0.78); z-index:50; display:none; align-items:center; justify-content:center; padding:16px}
+  #overlay.open{display:flex}
+  .modal{background:#1a1714; border:1px solid rgba(217,164,65,0.3); border-radius:16px; width:100%; max-width:430px; padding:24px 24px 22px; position:relative; max-height:92vh; overflow-y:auto}
+  .modal h3{font-family:Georgia,serif; font-weight:400; font-size:1.25rem}
+  .modal .pos{color:var(--dim); font-size:0.78rem; margin:2px 0 16px}
+  .modal .close{position:absolute; top:12px; right:16px; background:none; border:0; color:var(--dim); font-size:1.4rem; cursor:pointer; line-height:1}
+  .fld{margin-bottom:15px}
+  .fld label{display:block; font-size:0.76rem; letter-spacing:0.07em; text-transform:uppercase; color:var(--dim); margin-bottom:7px}
+  .swatches{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .sw{width:30px; height:30px; border-radius:50%; cursor:pointer; border:2px solid transparent; box-shadow:0 0 0 1px rgba(232,224,208,0.2)}
+  .sw.on{border-color:var(--paper); box-shadow:0 0 0 2px var(--gold)}
+  input[type=color]{width:42px; height:30px; border:1px solid rgba(232,224,208,0.2); border-radius:7px; background:var(--card); cursor:pointer; padding:2px}
+  textarea, input[type=text]{
+    width:100%; background:#12100e; color:var(--paper); border:1px solid rgba(232,224,208,0.18);
+    border-radius:9px; padding:10px 12px; font-family:inherit; font-size:0.9rem; resize:vertical;
+  }
+  textarea{min-height:74px}
+  textarea:focus, input[type=text]:focus{outline:none; border-color:var(--teal)}
+  .bytes{font-size:0.72rem; color:var(--dim); text-align:right; margin-top:4px}
+  .bytes.over{color:var(--verm); font-weight:700}
+  .modal .btn{width:100%; padding:12px; font-size:0.95rem; margin-top:4px}
+  #txStatus{margin-top:12px; font-size:0.83rem; text-align:center; min-height:1.2em; color:var(--gold)}
+  #txPre{margin-top:4px; font-size:0.78rem; text-align:center; color:var(--teal); min-height:1em}
+  #modalErr{margin-top:10px; font-size:0.8rem; text-align:center; color:var(--verm); min-height:1em}
+  .spin{display:inline-block; width:12px; height:12px; border:2px solid rgba(217,164,65,0.3); border-top-color:var(--gold); border-radius:50%; animation:sp 0.7s linear infinite; vertical-align:-2px; margin-right:6px}
+  @keyframes sp{to{transform:rotate(360deg)}}
+
+  /* ---------- toast ---------- */
+  #toast{
+    position:fixed; bottom:26px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:#0f0d0b; border:1px solid var(--gold); color:var(--paper); border-radius:12px;
+    padding:13px 22px; font-size:0.88rem; z-index:70; opacity:0; transition:all .3s; pointer-events:none;
+    max-width:90vw; text-align:center; box-shadow:0 10px 34px rgba(0,0,0,0.6);
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0)}
+  #toast.ok{border-color:var(--teal)}
+  #toast.err{border-color:var(--verm)}
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid rgba(232,224,208,0.08); margin-top:44px; padding:26px 0 34px; text-align:center; color:var(--dim); font-size:0.8rem}
+  footer .f-ko{color:var(--gold); opacity:0.6; margin-top:6px}
+  footer a{color:var(--dim); border-bottom:1px dotted rgba(143,133,116,0.5)}
+  footer a:hover{color:var(--gold)}
+
+  @media(max-width:560px){
+    .stat{min-width:118px; padding:11px 16px}
+    .stat .num{font-size:1.25rem}
+    .hero h1{font-size:1.35rem}
+    header{justify-content:center}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="wordmark"><span class="en">CHEOMA</span><span class="ko">처마</span></div>
+    <div class="hdr-right">
+      <div class="lang">
+        <button id="lang-en" onclick="setLang('en')">EN</button>
+        <button id="lang-ko" onclick="setLang('ko')">한국어</button>
+        <button id="lang-tr" onclick="setLang('tr')">TR</button>
+      </div>
+      <div id="walletBox">
+        <div id="walletInfo"></div>
+        <button class="btn" id="connectBtn" onclick="connect()" data-i18n="connect">Connect wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <section class="hero">
+    <h1 data-i18n="tagline">Lay a tile. Make a wish. Raise the roof — together.</h1>
+    <p class="explain" data-i18n="explainer">A digital giwa-bulsa 기와불사 — the Korean temple tradition of donating roof tiles inked with wishes, brought fully on-chain. One tile is fragile; together they make a roof.</p>
+    <div class="stats">
+      <div class="stat"><div class="num"><span id="stLaid">–</span><small> / 2048</small></div><div class="lbl" data-i18n="statLaid">tiles laid</div></div>
+      <div class="stat"><div class="num" id="stPct">–%</div><div class="lbl" data-i18n="statPct">roof complete</div></div>
+      <div class="stat"><div class="num" id="stGivers">–</div><div class="lbl" data-i18n="statGivers">givers</div></div>
+    </div>
+    <div class="hero-links">
+      <a href="https://github.com/izzetcakmak/cheoma" target="_blank" rel="noopener" data-i18n="linkGithub">GitHub repo</a>
+      <a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e" target="_blank" rel="noopener" data-i18n="linkContract">Verified contract</a>
+    </div>
+  </section>
+
+  <section class="roof-sec">
+    <p class="hint" data-i18n="roofHint">Hover or tap a laid tile to read its wish · click an empty tile to lay yours</p>
+    <div class="roof-wrap">
+      <svg class="ridge" viewBox="0 0 968 64" preserveAspectRatio="none" aria-hidden="true">
+        <path d="M0 64 L0 18 C 90 32 210 42 484 44 C 758 42 878 32 968 18 L968 64 Z" fill="#26221d"/>
+        <path d="M0 18 C 90 32 210 42 484 44 C 758 42 878 32 968 18" fill="none" stroke="#d9a441" stroke-width="1.6" opacity="0.35"/>
+      </svg>
+      <div class="roof-body">
+        <canvas id="roof" width="968" height="488"></canvas>
+        <div id="tooltip"></div>
+      </div>
+      <svg class="eaves" viewBox="0 0 960 32" preserveAspectRatio="none" aria-hidden="true">
+        <defs>
+          <pattern id="smk" x="0" y="0" width="30" height="32" patternUnits="userSpaceOnUse">
+            <path d="M0 0 H30 V10 H0 Z" fill="#26221d"/>
+            <circle cx="15" cy="14" r="11" fill="#26221d"/>
+            <circle cx="15" cy="14" r="10" fill="none" stroke="#d9a441" stroke-width="1" opacity="0.4"/>
+            <circle cx="15" cy="14" r="3.4" fill="none" stroke="#d9a441" stroke-width="1" opacity="0.55"/>
+          </pattern>
+        </defs>
+        <rect width="960" height="32" fill="url(#smk)"/>
+      </svg>
+    </div>
+  </section>
+
+  <section class="wall-sec">
+    <h2 class="sec"><span data-i18n="wallTitle">Wish Wall</span><span class="hanja">소원</span></h2>
+    <p class="sec-sub" data-i18n="wallSub">The latest wishes inked on the roof</p>
+    <div id="wall"><div class="wall-empty" data-i18n="wallEmpty">No wishes yet — be the first to lay a tile.</div></div>
+  </section>
+
+  <footer>
+    <div><span data-i18n="footBuilt">Built for GASOK — GIWA MVP Build Phase</span> · <a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e" target="_blank" rel="noopener">0xc62a…ec2e</a> · <span data-i18n="footChain">fully on-chain · zero backend</span></div>
+    <div class="f-ko">기와 한 장의 정성이 모여 지붕이 됩니다</div>
+  </footer>
+
+</div>
+
+<!-- modal -->
+<div id="overlay">
+  <div class="modal">
+    <button class="close" onclick="closeModal()" aria-label="close">×</button>
+    <h3 id="mTitle">Lay tile</h3>
+    <p class="pos" id="mPos"></p>
+    <div class="fld">
+      <label data-i18n="glaze">Glaze color</label>
+      <div class="swatches" id="swatches"><input type="color" id="colorPick" value="#1fb6a3"></div>
+    </div>
+    <div class="fld">
+      <label data-i18n="wishLabel">Your wish</label>
+      <textarea id="wishInput" maxlength="140" data-i18n-ph="wishPh" placeholder="Ink your wish on this tile…"></textarea>
+      <div class="bytes" id="byteCount">0 / 140 bytes</div>
+    </div>
+    <div class="fld">
+      <label data-i18n="donation">Donation (ETH, optional)</label>
+      <input type="text" id="donInput" inputmode="decimal" placeholder="0.0">
+    </div>
+    <button class="btn" id="layBtn" onclick="doLay()" data-i18n="layBtn">Lay this tile</button>
+    <div id="txStatus"></div>
+    <div id="txPre"></div>
+    <div id="modalErr"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+"use strict";
+/* ============ constants ============ */
+const RPC        = "https://sepolia-rpc.giwa.io";
+const FLASH_RPC  = "https://sepolia-rpc-flashblocks.giwa.io";
+const EXPLORER   = "https://sepolia-explorer.giwa.io";
+const CONTRACT   = "0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e";
+const CHAIN_ID   = 91342n;
+const CHAIN_PARAMS = {
+  chainId: "0x164ce",
+  chainName: "GIWA Sepolia",
+  nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+  rpcUrls: [RPC],
+  blockExplorerUrls: [EXPLORER]
+};
+const ABI = [
+  "function layTile(uint256 id, uint24 color, string wish) payable",
+  "function getRange(uint256 start, uint256 count) view returns (address[] givers, uint24[] colors)",
+  "function tileOf(uint256 id) view returns (tuple(address giver, uint24 color, uint64 laidAt, string wish))",
+  "function laidCount() view returns (uint256)",
+  "function tilesLaidBy(address) view returns (uint256)",
+  "event TileLaid(uint256 indexed id, address indexed giver, uint24 color, string wish, uint256 donation)"
+];
+const COLS = 64, ROWS = 32, TOTAL = 2048, CELL = 15, PAD = 4;
+const W = COLS * CELL + PAD * 2, H = ROWS * CELL + PAD * 2;
+const PRESETS = ["#1fb6a3","#e0523a","#d9a441","#4a6fa5","#4a7c59","#d96c2e","#8c5a9e","#e8e0d0"];
+const enc = new TextEncoder();
+
+/* ============ i18n ============ */
+const I18N = {
+  en: {
+    tagline:"Lay a tile. Make a wish. Raise the roof — together.",
+    explainer:"A digital giwa-bulsa 기와불사 — the Korean temple tradition of donating roof tiles inked with wishes, brought fully on-chain. One tile is fragile; together they make a roof.",
+    statLaid:"tiles laid", statPct:"roof complete", statGivers:"givers",
+    linkGithub:"GitHub repo", linkContract:"Verified contract",
+    connect:"Connect wallet", connecting:"Connecting…",
+    noWallet:"No wallet found — install GIWA Wallet or MetaMask to lay a tile. You can still watch the roof rise.",
+    roofHint:"Hover or tap a laid tile to read its wish · click an empty tile to lay yours",
+    modalTitle:"Lay tile #{id}", posFmt:"column {x} · row {y}",
+    glaze:"Glaze color", wishLabel:"Your wish",
+    wishPh:"Ink your wish on this tile…", bytesFmt:"{n} / 140 bytes",
+    donation:"Donation (ETH, optional)",
+    layBtn:"Lay this tile", connectFirst:"Connect wallet to lay",
+    waitingWallet:"Confirm in your wallet…", pendingTx:"Laying tile… {s}s",
+    preconf:"preconfirmed in ~{ms}ms via Flashblocks ⚡",
+    confirmedToast:"Tile #{id} laid — confirmed in {s}s on GIWA 🏮",
+    errTaken:"This tile has already been laid — pick another.",
+    errCap:"This wallet has reached the 16-tile cap.",
+    errWishLong:"Wish is too long (max 140 bytes).",
+    errRejected:"Transaction cancelled.",
+    errFailed:"Transaction failed — please try again.",
+    errBadAmount:"Invalid ETH amount.",
+    wallTitle:"Wish Wall", wallSub:"The latest wishes inked on the roof",
+    wallEmpty:"No wishes yet — be the first to lay a tile.",
+    footBuilt:"Built for GASOK — GIWA MVP Build Phase",
+    footChain:"fully on-chain · zero backend",
+    tile:"Tile", loading:"…"
+  },
+  ko: {
+    tagline:"기와 한 장을 올리고, 소원을 적고, 함께 지붕을 올리세요.",
+    explainer:"디지털 기와불사 — 법당이 세워지기 전 기와에 소원을 적어 시주하던 전통을 온체인으로 옮겼습니다. 기와 한 장은 약하지만, 함께 모이면 지붕이 됩니다.",
+    statLaid:"올린 기와", statPct:"지붕 완성", statGivers:"시주자",
+    linkGithub:"GitHub 저장소", linkContract:"검증된 컨트랙트",
+    connect:"지갑 연결", connecting:"연결 중…",
+    noWallet:"지갑이 없습니다 — 기와를 올리려면 GIWA Wallet 또는 MetaMask를 설치하세요. 지붕은 지갑 없이도 볼 수 있습니다.",
+    roofHint:"올려진 기와를 눌러 소원을 읽고 · 빈 기와를 눌러 직접 올려 보세요",
+    modalTitle:"기와 #{id} 올리기", posFmt:"{x}열 · {y}행",
+    glaze:"유약 색", wishLabel:"소원",
+    wishPh:"이 기와에 소원을 적어 주세요…", bytesFmt:"{n} / 140 바이트",
+    donation:"시주 (ETH, 선택)",
+    layBtn:"이 기와 올리기", connectFirst:"지갑을 연결하고 올리기",
+    waitingWallet:"지갑에서 승인해 주세요…", pendingTx:"기와를 올리는 중… {s}초",
+    preconf:"Flashblocks로 약 {ms}ms 만에 사전확정 ⚡",
+    confirmedToast:"기와 #{id} 완료 — GIWA에서 {s}초 만에 확정 🏮",
+    errTaken:"이미 올려진 기와입니다 — 다른 기와를 골라 주세요.",
+    errCap:"이 지갑은 16장 한도에 도달했습니다.",
+    errWishLong:"소원이 너무 깁니다 (최대 140바이트).",
+    errRejected:"거래가 취소되었습니다.",
+    errFailed:"거래 실패 — 다시 시도해 주세요.",
+    errBadAmount:"올바르지 않은 ETH 금액입니다.",
+    wallTitle:"소원 벽", wallSub:"지붕에 새겨진 최신 소원들",
+    wallEmpty:"아직 소원이 없습니다 — 첫 기와를 올려 보세요.",
+    footBuilt:"GASOK — GIWA MVP 빌드 단계를 위해 만들어졌습니다",
+    footChain:"완전 온체인 · 백엔드 없음",
+    tile:"기와", loading:"…"
+  },
+  tr: {
+    tagline:"Bir kiremit koy. Bir dilek tut. Çatıyı birlikte yükselt.",
+    explainer:"Dijital bir giwa-bulsa 기와불사 — Kore tapınaklarında kiremit bağışlayıp üzerine dilek yazma geleneği, artık tamamen zincir üstünde. Tek kiremit kırılgandır; birlikte çatı olurlar.",
+    statLaid:"döşenen kiremit", statPct:"çatı tamam", statGivers:"bağışçı",
+    linkGithub:"GitHub deposu", linkContract:"Doğrulanmış kontrat",
+    connect:"Cüzdan bağla", connecting:"Bağlanıyor…",
+    noWallet:"Cüzdan bulunamadı — kiremit döşemek için GIWA Wallet veya MetaMask kurun. Çatıyı cüzdansız da izleyebilirsin.",
+    roofHint:"Döşenmiş bir kiremide dokunup dileği oku · boş bir kiremide tıklayıp kendininkini döşe",
+    modalTitle:"Kiremit #{id} döşe", posFmt:"sütun {x} · satır {y}",
+    glaze:"Sır rengi", wishLabel:"Dileğin",
+    wishPh:"Dileğini bu kiremide yaz…", bytesFmt:"{n} / 140 bayt",
+    donation:"Bağış (ETH, isteğe bağlı)",
+    layBtn:"Bu kiremidi döşe", connectFirst:"Döşemek için cüzdan bağla",
+    waitingWallet:"Cüzdanında onayla…", pendingTx:"Kiremit döşeniyor… {s}sn",
+    preconf:"Flashblocks ile ~{ms}ms içinde ön onay ⚡",
+    confirmedToast:"Kiremit #{id} döşendi — GIWA üzerinde {s}sn içinde onaylandı 🏮",
+    errTaken:"Bu kiremit zaten döşenmiş — başka bir tane seç.",
+    errCap:"Bu cüzdan 16 kiremit sınırına ulaştı.",
+    errWishLong:"Dilek çok uzun (en fazla 140 bayt).",
+    errRejected:"İşlem iptal edildi.",
+    errFailed:"İşlem başarısız — lütfen tekrar dene.",
+    errBadAmount:"Geçersiz ETH miktarı.",
+    wallTitle:"Dilek Duvarı", wallSub:"Çatıya yazılan son dilekler",
+    wallEmpty:"Henüz dilek yok — ilk kiremidi sen döşe.",
+    footBuilt:"GASOK — GIWA MVP Build Phase için geliştirildi",
+    footChain:"tamamen zincir üstü · sıfır backend",
+    tile:"Kiremit", loading:"…"
+  }
+};
+let lang = localStorage.getItem("cheoma_lang") || "en";
+function t(k){ return (I18N[lang] && I18N[lang][k]) || I18N.en[k] || k; }
+function setLang(l){
+  lang = l; localStorage.setItem("cheoma_lang", l);
+  document.querySelectorAll(".lang button").forEach(b => b.classList.remove("on"));
+  const btn = document.getElementById("lang-" + l); if (btn) btn.classList.add("on");
+  document.querySelectorAll("[data-i18n]").forEach(el => { el.textContent = t(el.getAttribute("data-i18n")); });
+  document.querySelectorAll("[data-i18n-ph]").forEach(el => { el.placeholder = t(el.getAttribute("data-i18n-ph")); });
+  updateBytes(); updateWalletUI(); renderWall(lastEvents);
+  if (modalId !== null) fillModalHead();
+}
+
+/* ============ state ============ */
+let readProvider = null, readC = null;
+let signer = null, account = null, ownCount = null;
+const tiles = new Array(TOTAL).fill(null);   // {giver, color} | null
+const wishCache = new Map();                 // id -> {wish, laidAt}
+let hoverId = -1, stickyTip = false;
+let modalId = null, curColor = "#1fb6a3";
+let lastEvents = [];
+let txBusy = false;
+let swTimer = null, flashTimer = null, preconfMs = null;
+
+const cv = document.getElementById("roof");
+const ctx = cv.getContext("2d");
+const tipEl = document.getElementById("tooltip");
+
+/* ============ canvas ============ */
+function setupCanvas(){
+  const scale = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * scale; cv.height = H * scale;
+  ctx.setTransform(scale, 0, 0, scale, 0, 0);
+  cv.style.aspectRatio = W + " / " + H;
+}
+function render(){
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = "#1a1714"; ctx.fillRect(0, 0, W, H);
+  for (let id = 0; id < TOTAL; id++){
+    const x = PAD + (id % COLS) * CELL, y = PAD + Math.floor(id / COLS) * CELL;
+    const tl = tiles[id];
+    if (tl){
+      ctx.fillStyle = "#" + tl.color.toString(16).padStart(6, "0");
+      rr(x + 1, y + 1, CELL - 2, CELL - 2, 3); ctx.fill();
+      ctx.strokeStyle = "rgba(20,18,16,0.4)"; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x + CELL / 2, y + CELL / 2, (CELL - 2) / 2 - 2.5, 0, Math.PI * 2); ctx.stroke();
+    } else {
+      ctx.strokeStyle = "rgba(232,224,208,0.07)"; ctx.lineWidth = 1;
+      ctx.strokeRect(x + 1.5, y + 1.5, CELL - 3, CELL - 3);
+    }
+  }
+  if (hoverId >= 0){
+    const x = PAD + (hoverId % COLS) * CELL, y = PAD + Math.floor(hoverId / COLS) * CELL;
+    ctx.strokeStyle = "#d9a441"; ctx.lineWidth = 1.6;
+    rr(x + 0.5, y + 0.5, CELL - 1, CELL - 1, 3); ctx.stroke();
+  }
+}
+function rr(x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function tileFromEvent(e){
+  const rect = cv.getBoundingClientRect();
+  const px = (e.clientX - rect.left) * (W / rect.width);
+  const py = (e.clientY - rect.top) * (H / rect.height);
+  const c = Math.floor((px - PAD) / CELL), r = Math.floor((py - PAD) / CELL);
+  if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return -1;
+  return r * COLS + c;
+}
+
+/* ============ tooltip ============ */
+function short(a){ return a ? a.slice(0, 6) + "…" + a.slice(-4) : ""; }
+async function showTip(id, clientX, clientY){
+  const tl = tiles[id]; if (!tl) return;
+  tipEl.innerHTML = "";
+  const meta = document.createElement("div"); meta.className = "tt-meta";
+  meta.textContent = t("tile") + " #" + id + " · " + short(tl.giver);
+  const wish = document.createElement("div"); wish.className = "tt-wish"; wish.textContent = t("loading");
+  const date = document.createElement("div"); date.className = "tt-date";
+  tipEl.appendChild(meta); tipEl.appendChild(wish); tipEl.appendChild(date);
+  tipEl.style.display = "block";
+  positionTip(clientX, clientY);
+  const cached = wishCache.get(id);
+  if (cached){ applyTip(wish, date, cached); return; }
+  try {
+    const info = await readC.tileOf(id);
+    const data = { wish: info.wish || info[3], laidAt: Number(info.laidAt !== undefined ? info.laidAt : info[2]) };
+    wishCache.set(id, data);
+    if (hoverId === id || stickyTip) applyTip(wish, date, data);
+  } catch (e) { wish.textContent = "—"; }
+}
+function applyTip(wishEl2, dateEl, data){
+  wishEl2.textContent = data.wish ? "“" + data.wish + "”" : "—";
+  dateEl.textContent = data.laidAt ? new Date(data.laidAt * 1000).toLocaleDateString() : "";
+}
+function positionTip(clientX, clientY){
+  const body = cv.parentElement.getBoundingClientRect();
+  let lx = clientX - body.left + 14, ly = clientY - body.top + 14;
+  const tw = tipEl.offsetWidth || 220, th = tipEl.offsetHeight || 60;
+  if (lx + tw > body.width - 4) lx = clientX - body.left - tw - 14;
+  if (ly + th > body.height - 4) ly = clientY - body.top - th - 14;
+  tipEl.style.left = Math.max(4, lx) + "px"; tipEl.style.top = Math.max(4, ly) + "px";
+}
+function hideTip(){ tipEl.style.display = "none"; stickyTip = false; }
+
+cv.addEventListener("mousemove", (e) => {
+  const id = tileFromEvent(e);
+  if (id !== hoverId){ hoverId = id; render(); stickyTip = false;
+    if (id >= 0 && tiles[id]) showTip(id, e.clientX, e.clientY); else hideTip();
+  } else if (id >= 0 && tiles[id] && !stickyTip) positionTip(e.clientX, e.clientY);
+});
+cv.addEventListener("mouseleave", () => { hoverId = -1; render(); if (!stickyTip) hideTip(); });
+cv.addEventListener("click", (e) => {
+  const id = tileFromEvent(e); if (id < 0) return;
+  if (tiles[id]){ hoverId = id; render(); stickyTip = true; showTip(id, e.clientX, e.clientY); }
+  else { hideTip(); openModal(id); }
+});
+document.addEventListener("click", (e) => { if (stickyTip && !cv.contains(e.target)) hideTip(); });
+
+/* ============ read / poll ============ */
+function initRead(){
+  readProvider = new ethers.JsonRpcProvider(RPC, 91342, { staticNetwork: true });
+  readC = new ethers.Contract(CONTRACT, ABI, readProvider);
+}
+async function refresh(){
+  try {
+    const chunks = await Promise.all([0, 1, 2, 3].map(i => readC.getRange(i * 512, 512)));
+    let changed = false;
+    chunks.forEach((res, ci) => {
+      const givers = res[0], colors = res[1];
+      for (let j = 0; j < 512; j++){
+        const id = ci * 512 + j, g = givers[j];
+        if (g && g !== ethers.ZeroAddress){
+          const col = Number(colors[j]);
+          if (!tiles[id] || tiles[id].color !== col || tiles[id].giver !== g){
+            tiles[id] = { giver: g, color: col }; changed = true;
+          }
+        }
+      }
+    });
+    updateStats();
+    if (changed) render();
+  } catch (e) { /* RPC hiccup — keep last state */ }
+  try { await refreshWall(); } catch (e) { /* ignore */ }
+  try { if (account) await updateOwnCount(); } catch (e) { /* ignore */ }
+}
+function updateStats(){
+  let laid = 0; const givers = new Set();
+  for (const tl of tiles) if (tl){ laid++; givers.add(tl.giver.toLowerCase()); }
+  document.getElementById("stLaid").textContent = laid;
+  document.getElementById("stPct").textContent = (laid / TOTAL * 100).toFixed(1) + "%";
+  document.getElementById("stGivers").textContent = givers.size;
+}
+
+/* ============ wish wall ============ */
+let wallSig = "";
+async function refreshWall(){
+  const evs = await readC.queryFilter(readC.filters.TileLaid(), 0);
+  const last = evs.slice(-12).reverse();
+  const sig = last.map(e => e.transactionHash + "-" + e.args.id).join("|");
+  if (sig === wallSig) return;
+  wallSig = sig; lastEvents = last; renderWall(last);
+}
+function renderWall(events){
+  const wall = document.getElementById("wall"); wall.innerHTML = "";
+  if (!events || !events.length){
+    const d = document.createElement("div"); d.className = "wall-empty"; d.textContent = t("wallEmpty");
+    wall.appendChild(d); return;
+  }
+  for (const ev of events){
+    const id = Number(ev.args.id), color = Number(ev.args.color);
+    const item = document.createElement("div"); item.className = "wall-item";
+    const chip = document.createElement("div"); chip.className = "chip";
+    chip.style.background = "#" + color.toString(16).padStart(6, "0");
+    const body = document.createElement("div");
+    const wish = document.createElement("div"); wish.className = "w-wish";
+    wish.textContent = ev.args.wish ? "“" + ev.args.wish + "”" : "—";
+    const meta = document.createElement("div"); meta.className = "w-meta";
+    meta.textContent = t("tile") + " #" + id + " · " + short(ev.args.giver);
+    body.appendChild(wish); body.appendChild(meta);
+    item.appendChild(chip); item.appendChild(body);
+    wall.appendChild(item);
+  }
+}
+
+/* ============ wallet ============ */
+async function connect(){
+  if (!window.ethereum){ toast(t("noWallet"), "err", 5000); return; }
+  const btn = document.getElementById("connectBtn");
+  btn.textContent = t("connecting"); btn.disabled = true;
+  try {
+    await window.ethereum.request({ method: "eth_requestAccounts" });
+    await ensureChain();
+    const bp = new ethers.BrowserProvider(window.ethereum);
+    signer = await bp.getSigner();
+    account = await signer.getAddress();
+    await updateOwnCount();
+    updateWalletUI();
+    hookWalletEvents();
+  } catch (e) {
+    signer = null; account = null; updateWalletUI();
+    if (!(e && (e.code === 4001 || e.code === "ACTION_REJECTED"))) toast(t("errFailed"), "err");
+  } finally { btn.disabled = false; if (!account) btn.textContent = t("connect"); }
+}
+async function ensureChain(){
+  try {
+    await window.ethereum.request({ method: "wallet_switchEthereumChain", params: [{ chainId: CHAIN_PARAMS.chainId }] });
+  } catch (sw) {
+    const code = sw && (sw.code || (sw.data && sw.data.originalError && sw.data.originalError.code));
+    if (code === 4902 || code === -32603){
+      await window.ethereum.request({ method: "wallet_addEthereumChain", params: [CHAIN_PARAMS] });
+    } else throw sw;
+  }
+}
+let walletHooked = false;
+function hookWalletEvents(){
+  if (walletHooked || !window.ethereum || !window.ethereum.on) return;
+  walletHooked = true;
+  window.ethereum.on("accountsChanged", async (accs) => {
+    if (!accs || !accs.length){ signer = null; account = null; ownCount = null; }
+    else {
+      try { const bp = new ethers.BrowserProvider(window.ethereum); signer = await bp.getSigner(); account = await signer.getAddress(); await updateOwnCount(); } catch (e) {}
+    }
+    updateWalletUI();
+  });
+  window.ethereum.on("chainChanged", () => { signer = null; updateWalletUI(); });
+}
+async function updateOwnCount(){
+  try { ownCount = Number(await readC.tilesLaidBy(account)); } catch (e) {}
+}
+function updateWalletUI(){
+  const info = document.getElementById("walletInfo"), btn = document.getElementById("connectBtn");
+  if (account){
+    info.style.display = "block";
+    info.innerHTML = "";
+    const b = document.createElement("b"); b.textContent = short(account);
+    info.appendChild(b);
+    info.appendChild(document.createTextNode(" · " + (ownCount === null ? "?" : ownCount) + "/16"));
+    btn.style.display = "none";
+  } else {
+    info.style.display = "none"; btn.style.display = "inline-block"; btn.textContent = t("connect");
+  }
+  const layBtn = document.getElementById("layBtn");
+  if (layBtn && !txBusy) layBtn.textContent = account ? t("layBtn") : t("connectFirst");
+}
+
+/* ============ modal ============ */
+const swWrap = document.getElementById("swatches");
+const colorPick = document.getElementById("colorPick");
+PRESETS.forEach(hex => {
+  const s = document.createElement("div"); s.className = "sw"; s.style.background = hex;
+  s.addEventListener("click", () => selectColor(hex));
+  swWrap.insertBefore(s, colorPick);
+});
+function selectColor(hex){
+  curColor = hex; colorPick.value = hex;
+  document.querySelectorAll(".sw").forEach(el => {
+    el.classList.toggle("on", el.style.background && rgbToHex(el.style.background) === hex.toLowerCase());
+  });
+}
+function rgbToHex(rgb){
+  const m = rgb.match(/\d+/g); if (!m) return rgb.toLowerCase();
+  return "#" + m.slice(0, 3).map(n => (+n).toString(16).padStart(2, "0")).join("");
+}
+colorPick.addEventListener("input", () => {
+  curColor = colorPick.value;
+  document.querySelectorAll(".sw").forEach(el => el.classList.remove("on"));
+});
+function openModal(id){
+  if (txBusy) return;
+  modalId = id;
+  fillModalHead();
+  document.getElementById("wishInput").value = "";
+  document.getElementById("donInput").value = "";
+  document.getElementById("txStatus").textContent = "";
+  document.getElementById("txPre").textContent = "";
+  document.getElementById("modalErr").textContent = "";
+  selectColor("#1fb6a3");
+  updateBytes(); updateWalletUI();
+  document.getElementById("overlay").classList.add("open");
+  setTimeout(() => document.getElementById("wishInput").focus(), 60);
+}
+function fillModalHead(){
+  if (modalId === null) return;
+  document.getElementById("mTitle").textContent = t("modalTitle").replace("{id}", modalId);
+  document.getElementById("mPos").textContent =
+    t("posFmt").replace("{x}", (modalId % COLS) + 1).replace("{y}", Math.floor(modalId / COLS) + 1);
+}
+function closeModal(){
+  if (txBusy) return;
+  document.getElementById("overlay").classList.remove("open");
+  modalId = null;
+}
+document.getElementById("overlay").addEventListener("click", (e) => { if (e.target.id === "overlay") closeModal(); });
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeModal(); });
+
+const wishInput = document.getElementById("wishInput");
+wishInput.addEventListener("input", updateBytes);
+function wishBytes(){ return enc.encode(wishInput.value).length; }
+function updateBytes(){
+  const el = document.getElementById("byteCount"); if (!el) return;
+  const n = wishBytes();
+  el.textContent = t("bytesFmt").replace("{n}", n);
+  el.classList.toggle("over", n > 140);
+  const layBtn = document.getElementById("layBtn");
+  if (layBtn && !txBusy) layBtn.disabled = n > 140;
+}
+
+/* ============ lay tile tx ============ */
+async function doLay(){
+  if (txBusy) return;
+  const errEl = document.getElementById("modalErr"); errEl.textContent = "";
+  if (!account){ await connect(); if (!account) return; updateWalletUI(); return; }
+  const id = modalId; if (id === null) return;
+  if (tiles[id]){ errEl.textContent = t("errTaken"); return; }
+  if (wishBytes() > 140){ errEl.textContent = t("errWishLong"); return; }
+  if (ownCount !== null && ownCount >= 16){ errEl.textContent = t("errCap"); return; }
+  let value = 0n;
+  const dv = document.getElementById("donInput").value.trim();
+  if (dv){ try { value = ethers.parseEther(dv); } catch (e) { errEl.textContent = t("errBadAmount"); return; } }
+  const wish = wishInput.value;
+  const color = parseInt(curColor.slice(1), 16);
+  const layBtn = document.getElementById("layBtn");
+  const stEl = document.getElementById("txStatus"), preEl = document.getElementById("txPre");
+  txBusy = true; layBtn.disabled = true; preconfMs = null; preEl.textContent = "";
+  stEl.innerHTML = '<span class="spin"></span>' ; stEl.appendChild(document.createTextNode(t("waitingWallet")));
+  try {
+    // make sure we are still on GIWA Sepolia
+    const net = await signer.provider.getNetwork();
+    if (net.chainId !== CHAIN_ID){ await ensureChain(); const bp = new ethers.BrowserProvider(window.ethereum); signer = await bp.getSigner(); }
+    const c = new ethers.Contract(CONTRACT, ABI, signer);
+    const tx = await c.layTile(id, color, wish, { value });
+    const t0 = performance.now();
+    swTimer = setInterval(() => {
+      stEl.innerHTML = '<span class="spin"></span>';
+      stEl.appendChild(document.createTextNode(t("pendingTx").replace("{s}", ((performance.now() - t0) / 1000).toFixed(1))));
+    }, 100);
+    startFlashProbe(tx.hash, t0, preEl);
+    await tx.wait();
+    stopTimers();
+    const secs = ((performance.now() - t0) / 1000).toFixed(2);
+    txBusy = false;
+    closeModal();
+    let msg = t("confirmedToast").replace("{id}", id).replace("{s}", secs);
+    if (preconfMs !== null) msg += "  ·  " + t("preconf").replace("{ms}", preconfMs);
+    toast(msg, "ok", 6500);
+    ownCount = ownCount === null ? null : ownCount + 1;
+    updateWalletUI();
+    refresh();
+  } catch (e) {
+    stopTimers(); txBusy = false;
+    stEl.textContent = ""; preEl.textContent = "";
+    errEl.textContent = parseErr(e);
+    layBtn.disabled = wishBytes() > 140;
+  }
+}
+function stopTimers(){
+  if (swTimer){ clearInterval(swTimer); swTimer = null; }
+  if (flashTimer){ clearInterval(flashTimer); flashTimer = null; }
+}
+function startFlashProbe(hash, t0, preEl){
+  let fails = 0;
+  flashTimer = setInterval(async () => {
+    try {
+      const res = await fetch(FLASH_RPC, {
+        method: "POST", headers: { "content-type": "application/json" },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "eth_getTransactionReceipt", params: [hash] })
+      });
+      const j = await res.json();
+      if (j && j.result){
+        preconfMs = Math.round(performance.now() - t0);
+        preEl.textContent = t("preconf").replace("{ms}", preconfMs);
+        clearInterval(flashTimer); flashTimer = null;
+      }
+    } catch (e) { if (++fails > 20){ clearInterval(flashTimer); flashTimer = null; } }
+  }, 150);
+}
+function parseErr(e){
+  if (e && (e.code === "ACTION_REJECTED" || e.code === 4001)) return t("errRejected");
+  const m = ((e && (e.reason || e.shortMessage || e.message)) || "").toLowerCase();
+  if (m.includes("taken") || m.includes("already") || m.includes("laid")) return t("errTaken");
+  if (m.includes("cap") || m.includes("max") || m.includes("16") || m.includes("limit")) return t("errCap");
+  if (m.includes("wish") || m.includes("long") || m.includes("byte") || m.includes("140")) return t("errWishLong");
+  return t("errFailed");
+}
+
+/* ============ toast ============ */
+let toastTimer = null;
+function toast(msg, kind, ms){
+  const el = document.getElementById("toast");
+  el.textContent = msg; el.className = "show " + (kind || "");
+  if (toastTimer) clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { el.className = ""; }, ms || 4000);
+}
+
+/* ============ boot ============ */
+(function boot(){
+  setupCanvas(); render();
+  setLang(lang);
+  if (typeof ethers === "undefined"){ toast("ethers.js failed to load — read-only mode unavailable", "err", 8000); return; }
+  try { initRead(); } catch (e) {}
+  refresh();
+  setInterval(refresh, 3000);
+  window.addEventListener("resize", () => { /* canvas scales via CSS; nothing to do */ });
+})();
+</script>
+</body>
+</html>
