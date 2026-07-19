@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEOMA 처마 — Team Introduction</title>
+<meta name="description" content="CHEOMA team introduction — Izzet Cakmak, founder and sole builder. GASOK application, GIWA-Native Ideas track.">
+<style>
+  :root{
+    --bg:#141210;
+    --roof:#26221d;
+    --roof-2:#2e2922;
+    --paper:#e8e0d0;
+    --paper-dim:rgba(232,224,208,.62);
+    --paper-faint:rgba(232,224,208,.38);
+    --teal:#1fb6a3;
+    --verm:#e0523a;
+    --gold:#d9a441;
+    --line:rgba(232,224,208,.12);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--bg);
+    color:var(--paper);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Noto Sans KR","Malgun Gothic",Roboto,sans-serif;
+    line-height:1.6;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--teal);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px}
+
+  /* ---------- header ---------- */
+  header{
+    border-bottom:1px solid var(--line);
+    padding:56px 0 44px;
+    position:relative;
+    overflow:hidden;
+  }
+  header::before{
+    content:"처마";
+    position:absolute;
+    right:-16px;top:-42px;
+    font-size:200px;
+    font-weight:800;
+    color:rgba(232,224,208,.035);
+    letter-spacing:-.06em;
+    pointer-events:none;
+    user-select:none;
+  }
+  .brandline{display:flex;align-items:center;gap:14px;margin-bottom:28px}
+  .brand-mark{
+    width:44px;height:44px;flex:none;
+  }
+  .brand-name{font-size:15px;font-weight:700;letter-spacing:.28em;text-transform:uppercase}
+  .brand-ko{color:var(--gold);font-size:15px;font-weight:600;letter-spacing:.1em}
+  .eyebrow{
+    display:inline-block;
+    font-size:11px;font-weight:700;letter-spacing:.24em;text-transform:uppercase;
+    color:var(--teal);
+    border:1px solid rgba(31,182,163,.35);
+    border-radius:999px;
+    padding:5px 14px;
+    margin-bottom:18px;
+  }
+  h1{font-size:clamp(30px,5vw,46px);font-weight:800;letter-spacing:-.02em;line-height:1.12}
+  h1 .accent{color:var(--gold)}
+  .header-sub{margin-top:14px;max-width:640px;color:var(--paper-dim);font-size:16px}
+  .header-links{margin-top:22px;display:flex;flex-wrap:wrap;gap:10px}
+  .chip{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:13px;color:var(--paper-dim);
+    background:var(--roof);
+    border:1px solid var(--line);
+    border-radius:999px;
+    padding:6px 14px;
+  }
+  .chip a{color:var(--paper)}
+  .chip .dot{width:6px;height:6px;border-radius:50%;background:var(--teal);flex:none}
+
+  /* ---------- sections ---------- */
+  section{padding:52px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  .sec-label{
+    display:flex;align-items:baseline;gap:12px;
+    margin-bottom:26px;
+  }
+  .sec-label h2{font-size:22px;font-weight:800;letter-spacing:-.01em}
+  .sec-label .ko{color:var(--paper-faint);font-size:14px;letter-spacing:.06em}
+  .sec-label::before{
+    content:"";
+    width:22px;height:3px;border-radius:2px;
+    background:var(--verm);
+    align-self:center;flex:none;
+  }
+
+  /* ---------- profile card ---------- */
+  .profile{
+    background:linear-gradient(160deg,var(--roof-2),var(--roof));
+    border:1px solid var(--line);
+    border-radius:18px;
+    padding:34px;
+    display:grid;
+    grid-template-columns:112px 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  .avatar{
+    width:112px;height:112px;border-radius:16px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    overflow:hidden;
+  }
+  .avatar svg{width:84px;height:84px}
+  .p-name{font-size:26px;font-weight:800;letter-spacing:-.01em}
+  .p-role{color:var(--gold);font-weight:700;font-size:15px;margin-top:2px}
+  .p-meta{margin-top:12px;display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--paper-dim)}
+  .p-meta b{color:var(--paper);font-weight:600}
+  .p-bio{margin-top:16px;color:var(--paper-dim);font-size:15px;max-width:640px}
+  .p-bio strong{color:var(--paper)}
+  .p-links{margin-top:18px;display:flex;flex-wrap:wrap;gap:10px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    font-size:13px;font-weight:600;
+    color:var(--paper);
+    background:rgba(31,182,163,.1);
+    border:1px solid rgba(31,182,163,.4);
+    border-radius:10px;
+    padding:8px 16px;
+    transition:background .15s;
+  }
+  .btn:hover{background:rgba(31,182,163,.2);text-decoration:none}
+  .btn.gold{background:rgba(217,164,65,.08);border-color:rgba(217,164,65,.4)}
+  .btn.gold:hover{background:rgba(217,164,65,.16)}
+
+  /* ---------- shipped grid ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+  .card{
+    background:var(--roof);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:22px;
+    display:flex;flex-direction:column;gap:10px;
+    transition:border-color .15s, transform .15s;
+  }
+  .card:hover{border-color:rgba(217,164,65,.4);transform:translateY(-2px)}
+  .card-top{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .card h3{font-size:17px;font-weight:800;letter-spacing:-.01em}
+  .status{
+    font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+    padding:3px 9px;border-radius:999px;white-space:nowrap;flex:none;
+  }
+  .st-live{color:#7ee8d8;background:rgba(31,182,163,.14);border:1px solid rgba(31,182,163,.4)}
+  .st-test{color:#f0c67a;background:rgba(217,164,65,.1);border:1px solid rgba(217,164,65,.4)}
+  .card p{font-size:14px;color:var(--paper-dim);flex:1}
+  .card .link{font-size:13px;font-weight:600}
+  .card .link span{color:var(--paper-faint);font-weight:400}
+
+  /* ---------- strengths ---------- */
+  .strengths{display:grid;grid-template-columns:repeat(auto-fill,minmax(400px,1fr));gap:14px}
+  .strength{
+    display:grid;grid-template-columns:40px 1fr;gap:16px;
+    background:var(--roof);
+    border:1px solid var(--line);
+    border-radius:14px;
+    padding:20px 22px;
+    align-items:start;
+  }
+  .s-ico{
+    width:40px;height:40px;border-radius:10px;
+    background:var(--bg);border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    font-size:17px;color:var(--gold);font-weight:800;
+  }
+  .strength h3{font-size:15px;font-weight:800;margin-bottom:4px}
+  .strength p{font-size:14px;color:var(--paper-dim)}
+  .strength p strong{color:var(--teal);font-weight:700}
+  .strength p em{color:var(--gold);font-style:normal;font-weight:700}
+
+  /* ---------- solo section ---------- */
+  .solo{
+    background:linear-gradient(160deg,var(--roof-2),var(--roof));
+    border:1px solid var(--line);
+    border-left:3px solid var(--gold);
+    border-radius:14px;
+    padding:28px 30px;
+  }
+  .solo p{color:var(--paper-dim);font-size:15px;max-width:760px}
+  .solo p + p{margin-top:14px}
+  .solo strong{color:var(--paper)}
+  .solo .plan{color:var(--teal);font-weight:700}
+
+  /* ---------- proof strip ---------- */
+  .proof{
+    display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;
+    margin-top:26px;
+  }
+  .stat{
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:12px;
+    padding:16px 18px;text-align:center;
+  }
+  .stat .n{font-size:24px;font-weight:800;color:var(--gold);letter-spacing:-.02em}
+  .stat .l{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--paper-faint);margin-top:4px}
+
+  /* ---------- footer ---------- */
+  footer{
+    padding:40px 0 56px;
+    color:var(--paper-faint);
+    font-size:13px;
+  }
+  .foot-row{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center;justify-content:space-between}
+  .foot-nav{display:flex;flex-wrap:wrap;gap:18px}
+  .foot-ko{margin-top:18px;letter-spacing:.3em;color:rgba(232,224,208,.18);font-size:12px}
+
+  @media (max-width:640px){
+    .profile{grid-template-columns:1fr}
+    .avatar{width:88px;height:88px}
+    .strengths{grid-template-columns:1fr}
+    header::before{font-size:130px;top:-24px}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <div class="brandline">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true">
+        <!-- sumaksae: round tile end-cap with petals -->
+        <circle cx="32" cy="32" r="29" fill="#26221d" stroke="#d9a441" stroke-width="2"/>
+        <g fill="#1fb6a3">
+          <ellipse cx="32" cy="15" rx="5.5" ry="10"/>
+          <ellipse cx="32" cy="49" rx="5.5" ry="10"/>
+          <ellipse cx="15" cy="32" rx="10" ry="5.5"/>
+          <ellipse cx="49" cy="32" rx="10" ry="5.5"/>
+          <ellipse cx="20" cy="20" rx="5.5" ry="10" transform="rotate(-45 20 20)"/>
+          <ellipse cx="44" cy="44" rx="5.5" ry="10" transform="rotate(-45 44 44)"/>
+          <ellipse cx="44" cy="20" rx="5.5" ry="10" transform="rotate(45 44 20)"/>
+          <ellipse cx="20" cy="44" rx="5.5" ry="10" transform="rotate(45 20 44)"/>
+        </g>
+        <circle cx="32" cy="32" r="7" fill="#e0523a"/>
+      </svg>
+      <span class="brand-name">Cheoma</span>
+      <span class="brand-ko">처마</span>
+    </div>
+    <span class="eyebrow">GASOK · Team Introduction</span>
+    <h1>One builder.<br>Two thousand forty-eight <span class="accent">tiles</span>.</h1>
+    <p class="header-sub">CHEOMA is a digital giwa-bulsa (기와불사) — a communal on-chain roof on GIWA, where every tile carries a wish. This page introduces the person laying the foundation.</p>
+    <div class="header-links">
+      <span class="chip"><span class="dot"></span><a href="https://izzetcakmak.github.io/cheoma/" target="_blank" rel="noopener">Live MVP — GIWA Sepolia testnet</a></span>
+      <span class="chip"><a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e" target="_blank" rel="noopener">Verified contract 0xc62a…ec2e</a></span>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <!-- ============ PROFILE ============ -->
+  <section id="profile">
+    <div class="sec-label"><h2>Founder</h2><span class="ko">건축가 · the builder</span></div>
+    <div class="profile">
+      <div class="avatar">
+        <svg viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="30" fill="#141210" stroke="#1fb6a3" stroke-width="1.5"/>
+          <g fill="#d9a441">
+            <ellipse cx="32" cy="17" rx="5" ry="9"/>
+            <ellipse cx="32" cy="47" rx="5" ry="9"/>
+            <ellipse cx="17" cy="32" rx="9" ry="5"/>
+            <ellipse cx="47" cy="32" rx="9" ry="5"/>
+            <ellipse cx="21.4" cy="21.4" rx="5" ry="9" transform="rotate(-45 21.4 21.4)"/>
+            <ellipse cx="42.6" cy="42.6" rx="5" ry="9" transform="rotate(-45 42.6 42.6)"/>
+            <ellipse cx="42.6" cy="21.4" rx="5" ry="9" transform="rotate(45 42.6 21.4)"/>
+            <ellipse cx="21.4" cy="42.6" rx="5" ry="9" transform="rotate(45 21.4 42.6)"/>
+          </g>
+          <circle cx="32" cy="32" r="6.5" fill="#e0523a"/>
+        </svg>
+      </div>
+      <div>
+        <div class="p-name">Izzet Cakmak</div>
+        <div class="p-role">Founder &amp; Sole Builder</div>
+        <div class="p-meta">
+          <span>Nationality — <b>Turkish</b></span>
+          <span>Role — <b>Full-stack Web3 engineer</b></span>
+          <span>Stack — <b>Solidity · Frontend · Infra &amp; Automation</b></span>
+        </div>
+        <p class="p-bio">
+          Independent builder who ships end-to-end: <strong>contracts, tests, deploy scripts, verification, and zero-dependency frontends</strong> — all from one keyboard. Specialized in fully on-chain SVG and generative-art contracts, consumer-simple dApp UX, and automation infrastructure (bots, pipelines, schedulers) that keeps products alive after launch.
+        </p>
+        <div class="p-links">
+          <a class="btn" href="https://github.com/izzetcakmak" target="_blank" rel="noopener">GitHub — izzetcakmak</a>
+          <a class="btn" href="https://x.com/izzetcakmak35" target="_blank" rel="noopener">X — @izzetcakmak35</a>
+          <a class="btn gold" href="mailto:izzetcakmak35700@gmail.com">izzetcakmak35700@gmail.com</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SHIPPED ============ -->
+  <section id="shipped">
+    <div class="sec-label"><h2>Shipped Products</h2><span class="ko">already on-chain, already live</span></div>
+    <div class="grid">
+
+      <div class="card">
+        <div class="card-top"><h3>Hoodlings</h3><span class="status st-live">Live · Mainnet</span></div>
+        <p>4,663 fully on-chain generative NFTs — SVG art and metadata rendered entirely inside the contract. Live on Robinhood Chain mainnet, public mint open.</p>
+        <div class="link"><span>proof of on-chain art at scale — the exact skill CHEOMA is built on</span></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Hurrian AI</h3><span class="status st-live">Live · Base</span></div>
+        <p>AI music dApp with live USDC payments on Base. Selected as a Circle "Build on Arc" hackathon finalist.</p>
+        <div class="link"><a href="https://hurrianai.com" target="_blank" rel="noopener">hurrianai.com</a></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Morsu</h3><span class="status st-live">Live</span></div>
+        <p>Walrus blob explorer — a clean, fast tool for browsing decentralized storage on Sui's Walrus network.</p>
+        <div class="link"><a href="https://morsu.xyz" target="_blank" rel="noopener">morsu.xyz</a></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>A NEW ONE</h3><span class="status st-test">Live · Testnet</span></div>
+        <p>Pump.fun-style meme launchpad on Arc Network testnet — bonding curves, token factory, and a full trading UI.</p>
+        <div class="link"><a href="https://anewone.xyz" target="_blank" rel="noopener">anewone.xyz</a></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>ENTARC</h3><span class="status st-live">Live</span></div>
+        <p>Autonomous VC agent that evaluates and backs projects — an AI-driven investment experiment on Arc.</p>
+        <div class="link"><a href="https://entarc.xyz" target="_blank" rel="noopener">entarc.xyz</a></div>
+      </div>
+
+      <div class="card">
+        <div class="card-top"><h3>Barbarians BTC Wars</h3><span class="status st-live">Live</span></div>
+        <p>Real-time 3D battle driven by the live BTC price, with an on-chain contract on Robinhood Chain mainnet.</p>
+        <div class="link"><a href="https://www.barbariansbtcwars.xyz" target="_blank" rel="noopener">barbariansbtcwars.xyz</a></div>
+      </div>
+
+    </div>
+
+    <div class="proof">
+      <div class="stat"><div class="n">6+</div><div class="l">Products shipped</div></div>
+      <div class="stat"><div class="n">4,663</div><div class="l">On-chain NFTs live</div></div>
+      <div class="stat"><div class="n">5</div><div class="l">Chains deployed to</div></div>
+      <div class="stat"><div class="n">1 day</div><div class="l">CHEOMA MVP build</div></div>
+    </div>
+  </section>
+
+  <!-- ============ STRENGTHS ============ -->
+  <section id="strengths">
+    <div class="sec-label"><h2>Core Strengths</h2><span class="ko">why this builder</span></div>
+    <div class="strengths">
+
+      <div class="strength">
+        <div class="s-ico">⚡</div>
+        <div>
+          <h3>Ships MVPs in days, not months</h3>
+          <p>The CHEOMA MVP you can use right now — <em>Solidity contract, test suite, deploy scripts, explorer verification, and a live frontend on GIWA Sepolia — was built and shipped in a single day.</em> That is the working pace, not the exception.</p>
+        </div>
+      </div>
+
+      <div class="strength">
+        <div class="s-ico">◉</div>
+        <div>
+          <h3>Fully on-chain art &amp; generative specialization</h3>
+          <p>CHEOMA's sumaksae tile art and metadata live <strong>100% inside the contract</strong> — no IPFS, no servers, nothing to rot. Hoodlings proved this approach at 4,663-token scale on mainnet.</p>
+        </div>
+      </div>
+
+      <div class="strength">
+        <div class="s-ico">□</div>
+        <div>
+          <h3>Zero-dependency engineering</h3>
+          <p>Single-file frontends, no frameworks, no build steps, one CDN script (ethers). Fewer moving parts means fewer failures, instant loads, and products that stay online for years without maintenance.</p>
+        </div>
+      </div>
+
+      <div class="strength">
+        <div class="s-ico">한</div>
+        <div>
+          <h3>EN / TR fluent, learning KO</h3>
+          <p>Building for a Korean-rooted chain with genuine respect for the culture it draws from — giwa-bulsa is treated as a living tradition to honor, not an aesthetic to borrow. Korean-friendly UX is a first-class goal.</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ SOLO ============ -->
+  <section id="solo">
+    <div class="sec-label"><h2>Why Solo Works for GASOK</h2><span class="ko">tight loop now, growing roof later</span></div>
+    <div class="solo">
+      <p><strong>During the MVP Build Phase, one builder is the tightest possible feedback loop.</strong> Idea → contract → deploy → user feedback → iteration happens in hours, with zero coordination overhead. Every mentor note from the program lands directly in the hands of the person who writes the code — nothing is lost in translation between roles. The track record above shows this loop already works: six live products, several on mainnet, all built solo.</p>
+      <p>Solo is the starting point, not the plan. <span class="plan">During the program, CHEOMA will actively recruit a Korean community manager / designer</span> — someone who can lead temple and brand collaboration pilots, shape Korean-language community channels, and make sure the giwa-bulsa tradition is represented authentically as the roof grows from one canvas into a multi-roof platform. Like the roof itself: one tile is laid first, then others join until it holds together.</p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <div>CHEOMA 처마 — Lay a tile. Make a wish. Raise the roof — together.</div>
+      <nav class="foot-nav">
+        <a href="index.html">Live App</a>
+        <a href="deck.html">Deck</a>
+        <a href="onepager.html">One-pager</a>
+        <a href="https://github.com/izzetcakmak/cheoma" target="_blank" rel="noopener">Repo</a>
+      </nav>
+    </div>
+    <div class="foot-ko">기와 한 장, 소원 하나 · GIWA Sepolia · GASOK 2026</div>
+  </div>
+</footer>
+
+</body>
+</html>
