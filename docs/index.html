@@ -507,30 +507,45 @@ function updateStats(){
 }
 
 /* ============ wish wall ============ */
+/* Derived from grid state + tileOf (shared wishCache) rather than logs, so it
+   never depends on RPC getLogs block-range limits as the chain grows. */
 let wallSig = "";
 async function refreshWall(){
-  const evs = await readC.queryFilter(readC.filters.TileLaid(), 0);
-  const last = evs.slice(-12).reverse();
-  const sig = last.map(e => e.transactionHash + "-" + e.args.id).join("|");
+  const laidIds = [];
+  for (let id = 0; id < TOTAL; id++) if (tiles[id]) laidIds.push(id);
+  const uncached = laidIds.filter(id => !wishCache.has(id));
+  const batch = uncached.slice(0, 24); // spread fetches across polls
+  await Promise.all(batch.map(async id => {
+    try {
+      const info = await readC.tileOf(id);
+      wishCache.set(id, { wish: info.wish !== undefined ? info.wish : info[3],
+                          laidAt: Number(info.laidAt !== undefined ? info.laidAt : info[2]) });
+    } catch (e) { /* retry next poll */ }
+  }));
+  const items = laidIds.filter(id => wishCache.has(id))
+    .map(id => ({ id, giver: tiles[id].giver, color: tiles[id].color,
+                  wish: wishCache.get(id).wish, laidAt: wishCache.get(id).laidAt }))
+    .sort((a, b) => b.laidAt - a.laidAt || b.id - a.id)
+    .slice(0, 12);
+  const sig = items.map(i => i.id + ":" + i.laidAt).join("|");
   if (sig === wallSig) return;
-  wallSig = sig; lastEvents = last; renderWall(last);
+  wallSig = sig; lastEvents = items; renderWall(items);
 }
-function renderWall(events){
+function renderWall(items){
   const wall = document.getElementById("wall"); wall.innerHTML = "";
-  if (!events || !events.length){
+  if (!items || !items.length){
     const d = document.createElement("div"); d.className = "wall-empty"; d.textContent = t("wallEmpty");
     wall.appendChild(d); return;
   }
-  for (const ev of events){
-    const id = Number(ev.args.id), color = Number(ev.args.color);
+  for (const it of items){
     const item = document.createElement("div"); item.className = "wall-item";
     const chip = document.createElement("div"); chip.className = "chip";
-    chip.style.background = "#" + color.toString(16).padStart(6, "0");
+    chip.style.background = "#" + it.color.toString(16).padStart(6, "0");
     const body = document.createElement("div");
     const wish = document.createElement("div"); wish.className = "w-wish";
-    wish.textContent = ev.args.wish ? "“" + ev.args.wish + "”" : "—";
+    wish.textContent = it.wish ? "“" + it.wish + "”" : "—";
     const meta = document.createElement("div"); meta.className = "w-meta";
-    meta.textContent = t("tile") + " #" + id + " · " + short(ev.args.giver);
+    meta.textContent = t("tile") + " #" + it.id + " · " + short(it.giver);
     body.appendChild(wish); body.appendChild(meta);
     item.appendChild(chip); item.appendChild(body);
     wall.appendChild(item);
