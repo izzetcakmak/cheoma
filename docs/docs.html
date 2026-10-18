@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CHEOMA 처마 — Docs</title>
+<meta name="description" content="CHEOMA documentation: how to lay a tile, the rules, the on-chain artwork and metadata, the contract reference, and how to build or deploy it on GIWA Sepolia.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%2032%2032'%3E%3Ccircle%20cx='16'%20cy='16'%20r='14'%20fill='%2326221d'%20stroke='%23d9a441'%20stroke-width='2'/%3E%3Ccircle%20cx='16'%20cy='16'%20r='4'%20fill='%231fb6a3'/%3E%3C/svg%3E">
+<style>
+  :root{
+    --bg:#141210; --roof:#26221d; --paper:#e8e0d0; --teal:#1fb6a3;
+    --verm:#e0523a; --gold:#d9a441; --dim:#8f8574; --card:#1c1916;
+    --line:rgba(232,224,208,0.09);
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{scroll-behavior:smooth; scroll-padding-top:20px}
+  body{
+    background:var(--bg); color:var(--paper);
+    font-family:'Segoe UI','Apple SD Gothic Neo','Malgun Gothic','Noto Sans KR',system-ui,sans-serif;
+    line-height:1.7; -webkit-font-smoothing:antialiased; min-height:100vh;
+    background-image:radial-gradient(ellipse 90% 40% at 50% -10%, rgba(31,182,163,0.05), transparent 60%);
+  }
+  a{color:var(--teal); text-decoration:none}
+  a:hover{color:var(--gold)}
+  .wrap{max-width:1080px; margin:0 auto; padding:0 16px}
+
+  /* ---------- header ---------- */
+  header.top{display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px 16px; padding:18px 0; border-bottom:1px solid var(--line)}
+  .wordmark{display:flex; align-items:baseline; gap:10px}
+  .wordmark:hover{color:inherit}
+  .wordmark .en{font-family:Georgia,'Times New Roman',serif; font-size:1.4rem; letter-spacing:0.22em; font-weight:700; color:var(--paper)}
+  .wordmark .ko{color:var(--gold); font-size:1.1rem; font-weight:600}
+  .top-nav{display:flex; flex-wrap:wrap; gap:6px 18px; font-size:0.88rem}
+  .top-nav a{color:var(--dim)}
+  .top-nav a:hover, .top-nav a.on{color:var(--gold)}
+
+  /* ---------- layout ---------- */
+  .layout{display:grid; grid-template-columns:minmax(0,1fr); gap:24px; padding:28px 0 0}
+  .layout > *{min-width:0}
+  @media(min-width:900px){
+    .layout{grid-template-columns:190px minmax(0,1fr); gap:56px}
+    .toc{position:sticky; top:24px; align-self:start}
+  }
+  .toc-title{font-size:0.72rem; letter-spacing:0.1em; text-transform:uppercase; color:var(--dim); margin-bottom:8px}
+  .toc nav{display:flex; flex-wrap:wrap; gap:6px 14px}
+  @media(min-width:900px){ .toc nav{flex-direction:column; gap:7px} }
+  .toc a{font-size:0.88rem; color:var(--dim)}
+  .toc a:hover{color:var(--gold)}
+
+  /* ---------- typography ---------- */
+  .eyebrow{font-size:0.74rem; letter-spacing:0.12em; text-transform:uppercase; color:var(--teal)}
+  .doc h1{font-family:Georgia,serif; font-weight:400; font-size:clamp(1.7rem,4vw,2.4rem); line-height:1.25; margin:8px 0 14px}
+  .lede{color:var(--dim); font-size:1.02rem; max-width:690px}
+  .doc section{padding-top:30px; margin-top:34px; border-top:1px solid var(--line); scroll-margin-top:16px}
+  .doc h2{font-family:Georgia,serif; font-weight:400; font-size:1.45rem; margin-bottom:10px}
+  .doc h2 .hanja{color:var(--gold); font-size:0.9rem; margin-left:8px; font-family:inherit}
+  .doc h3{font-size:1rem; font-weight:600; color:var(--gold); margin:22px 0 6px}
+  .doc p{margin:10px 0}
+  .doc ul, .doc ol{margin:8px 0 8px 22px}
+  .doc li{margin:5px 0}
+  .doc strong{color:var(--paper)}
+  code{font-family:Consolas,'Cascadia Mono',monospace; font-size:0.86em; background:var(--card); border:1px solid var(--line); border-radius:5px; padding:1px 5px; overflow-wrap:anywhere}
+  pre{background:#0f0d0b; border:1px solid var(--line); border-radius:11px; padding:14px 16px; overflow-x:auto; margin:12px 0; font-size:0.84rem; line-height:1.55}
+  pre code{background:none; border:0; padding:0; font-size:inherit; overflow-wrap:normal; white-space:pre}
+
+  /* ---------- tables ---------- */
+  .tbl{overflow-x:auto; margin:12px 0; border:1px solid var(--line); border-radius:11px}
+  table{width:100%; border-collapse:collapse; font-size:0.88rem}
+  th, td{text-align:left; padding:9px 12px; border-bottom:1px solid var(--line); vertical-align:top}
+  th{color:var(--gold); font-weight:600; background:var(--card); font-size:0.78rem; letter-spacing:0.04em; text-transform:uppercase}
+  tr:last-child td{border-bottom:0}
+
+  /* ---------- callouts & steps ---------- */
+  .note{border-left:3px solid var(--teal); background:var(--card); border-radius:0 10px 10px 0; padding:10px 14px; margin:14px 0; font-size:0.93rem}
+  .note.warn{border-color:var(--verm)}
+  .steps{list-style:none; margin:8px 0 0 0; counter-reset:s}
+  .steps li{counter-increment:s; position:relative; padding-left:40px; margin:14px 0}
+  .steps li::before{
+    content:counter(s); position:absolute; left:0; top:1px; width:26px; height:26px; border-radius:50%;
+    background:rgba(31,182,163,0.14); color:var(--teal); font-weight:700; font-size:0.8rem;
+    display:flex; align-items:center; justify-content:center;
+  }
+
+  /* ---------- footer ---------- */
+  footer{border-top:1px solid var(--line); margin-top:48px; padding:24px 0 34px; text-align:center; color:var(--dim); font-size:0.8rem}
+  footer a{color:var(--dim); border-bottom:1px dotted rgba(143,133,116,0.5)}
+  footer a:hover{color:var(--gold)}
+  footer .f-ko{color:var(--gold); opacity:0.6; margin-top:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <a class="wordmark" href="index.html"><span class="en">CHEOMA</span><span class="ko">처마</span></a>
+    <nav class="top-nav">
+      <a href="index.html">Live app</a>
+      <a href="docs.html" class="on">Docs</a>
+      <a href="team.html">Team</a>
+      <a href="deck.html">Deck</a>
+      <a href="onepager.html">One-pager</a>
+    </nav>
+  </header>
+
+  <div class="layout">
+
+    <aside class="toc">
+      <p class="toc-title">On this page</p>
+      <nav>
+        <a href="#overview">What CHEOMA is</a>
+        <a href="#quick-start">Quick start</a>
+        <a href="#network">Network details</a>
+        <a href="#rules">Tile rules</a>
+        <a href="#laying">Laying a tile</a>
+        <a href="#metadata">Wishes &amp; metadata</a>
+        <a href="#artwork">The artwork</a>
+        <a href="#ownership">Ownership &amp; transfers</a>
+        <a href="#donations">Donations</a>
+        <a href="#contract">Contract reference</a>
+        <a href="#developers">Developer guide</a>
+        <a href="#faq">FAQ</a>
+        <a href="#limits">Limits &amp; safety</a>
+        <a href="#roadmap">Roadmap</a>
+      </nav>
+    </aside>
+
+    <main class="doc">
+
+      <p class="eyebrow">Docs · GIWA Sepolia testnet</p>
+      <h1>CHEOMA documentation</h1>
+      <p class="lede">How to lay a tile, what the contract guarantees, how the artwork and metadata are built on-chain, and how to build or deploy the project yourself.</p>
+
+      <section id="overview">
+        <h2>What CHEOMA is <span class="hanja">처마</span></h2>
+        <p>CHEOMA is a digital <em>giwa-bulsa</em> (기와불사). At Korean temples, visitors donate roof tiles and ink a wish, or the name of someone they love, onto the clay before a new hall is built. CHEOMA brings that tradition on-chain: a shared roof of 2,048 tiles on a 64 × 32 grid, where every tile is a fully on-chain ERC-721 with its own glaze color and wish.</p>
+        <p>One contract, <code>Cheoma.sol</code>, on GIWA Sepolia generates the artwork and metadata. There is no backend, no IPFS, and no server to keep running. The web app is static files that read the chain directly.</p>
+
+        <h3>Key terms</h3>
+        <div class="tbl">
+          <table>
+            <tr><th>Term</th><th>Meaning</th></tr>
+            <tr><td>Roof</td><td>The shared 64 × 32 grid: 2,048 spots.</td></tr>
+            <tr><td>Tile</td><td>One spot once it is laid. It is an ERC-721 token whose id is the spot index.</td></tr>
+            <tr><td>Giver</td><td>The wallet that laid the tile. Stored on-chain and never changed, even after a transfer.</td></tr>
+            <tr><td>Glaze</td><td>The tile's color, a 24-bit RGB value.</td></tr>
+            <tr><td>Wish</td><td>The inscription on the tile, up to 140 bytes.</td></tr>
+            <tr><td>Sumaksae (수막새)</td><td>The round end-cap ornament on a roof tile. It is the tile's artwork.</td></tr>
+            <tr><td>Milestone</td><td>An event emitted each time the roof reaches a multiple of 256 tiles.</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="quick-start">
+        <h2>Quick start</h2>
+        <ol class="steps">
+          <li><strong>Get a wallet.</strong> Use GIWA Wallet or any injected EVM wallet such as MetaMask.</li>
+          <li><strong>Open the app.</strong> Go to the <a href="index.html">live app</a>. You can look at the roof without connecting a wallet.</li>
+          <li><strong>Connect and switch network.</strong> Click <em>Connect wallet</em>. If your wallet is not on GIWA Sepolia, the app asks it to switch, and adds the network first if needed.</li>
+          <li><strong>Get testnet ETH.</strong> Laying a tile costs gas, paid in GIWA Sepolia ETH. Testnet ETH has no real value.</li>
+          <li><strong>Lay a tile.</strong> Click an empty spot, pick a glaze, write your wish, optionally add a donation, then sign once.</li>
+        </ol>
+      </section>
+
+      <section id="network">
+        <h2>Network details</h2>
+        <div class="tbl">
+          <table>
+            <tr><th>Item</th><th>Value</th></tr>
+            <tr><td>Network</td><td>GIWA Sepolia (testnet)</td></tr>
+            <tr><td>Chain ID</td><td><code>91342</code> (<code>0x164ce</code>)</td></tr>
+            <tr><td>RPC</td><td><code>https://sepolia-rpc.giwa.io</code></td></tr>
+            <tr><td>Flashblocks RPC</td><td><code>https://sepolia-rpc-flashblocks.giwa.io</code>. The app checks transaction receipts here for faster preconfirmations.</td></tr>
+            <tr><td>Explorer</td><td><a href="https://sepolia-explorer.giwa.io">sepolia-explorer.giwa.io</a></td></tr>
+            <tr><td>Native currency</td><td>ETH (18 decimals)</td></tr>
+            <tr><td>Contract</td><td><code>0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e</code>, <a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e">verified on the explorer</a></td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="rules">
+        <h2>Tile rules</h2>
+        <p>These limits are enforced by the contract, not by the web app. Anyone calling the contract directly gets the same rules.</p>
+        <div class="tbl">
+          <table>
+            <tr><th>Rule</th><th>Value</th></tr>
+            <tr><td>Roof size</td><td>64 × 32 = 2,048 spots (<code>TOTAL_TILES</code>)</td></tr>
+            <tr><td>Spot id</td><td><code>id = y * 64 + x</code>, from 0 to 2047. <code>coordinates(id)</code> converts back to <code>(x, y)</code>.</td></tr>
+            <tr><td>One giver per spot</td><td>First transaction to land wins. A laid tile cannot be replaced.</td></tr>
+            <tr><td>Wish length</td><td>Up to 140 bytes of UTF-8 (<code>MAX_WISH_BYTES</code>)</td></tr>
+            <tr><td>Glaze</td><td>Any 24-bit RGB value</td></tr>
+            <tr><td>Wallet cap</td><td>Each address can lay at most 16 tiles (<code>MAX_PER_WALLET</code>). The cap counts tiles laid, not tiles held.</td></tr>
+            <tr><td>Donation</td><td>Optional. ETH sent with <code>layTile</code> is forwarded to <code>roofFund</code> in the same transaction.</td></tr>
+            <tr><td>Milestones</td><td><code>RoofMilestone(count)</code> is emitted at 256, 512, 768, 1024, 1280, 1536, 1792 and 2048 tiles.</td></tr>
+          </table>
+        </div>
+      </section>
+
+      <section id="laying">
+        <h2>Laying a tile</h2>
+        <p>Laying a tile is one transaction, <code>layTile(id, color, wish)</code>, with an optional ETH value. In that transaction the contract:</p>
+        <ul>
+          <li>checks that the spot is on the roof and empty, that the wish fits in 140 bytes, and that your wallet is under the 16-tile cap;</li>
+          <li>records you as the giver, and stores the glaze, the wish and the block timestamp;</li>
+          <li>mints the tile to you, emitting <code>Transfer</code> from the zero address and <code>TileLaid</code>;</li>
+          <li>emits <code>RoofMilestone</code> if this tile brought the roof to a multiple of 256;</li>
+          <li>forwards any attached ETH to <code>roofFund</code>.</li>
+        </ul>
+        <p>In the app, you first see a Flashblocks preconfirmation, then the block confirmation. The toast shows both times.</p>
+        <div class="note">There is no function to edit a wish, clear a spot, or burn a tile. Read your wish carefully before you sign.</div>
+      </section>
+
+      <section id="metadata">
+        <h2>Wishes &amp; metadata</h2>
+        <p>The wish is stored as UTF-8 bytes. The limit is in <strong>bytes, not characters</strong>. ASCII letters take one byte. Korean Hangul takes three bytes per syllable, and Turkish letters such as ş, ğ, ı, ö, ü and ç take two. The input shows the live byte count.</p>
+        <p><code>tokenURI(id)</code> returns a base64 JSON data URI with this shape:</p>
+        <pre><code>{
+  "name": "CHEOMA Tile #330",
+  "description": "&lt;the wish&gt;",
+  "attributes": [
+    { "trait_type": "X", "value": 10 },
+    { "trait_type": "Y", "value": 5 },
+    { "trait_type": "Glaze", "value": "#1fb6a3" }
+  ],
+  "image": "data:image/svg+xml;base64,..."
+}</code></pre>
+        <p>Quotes and backslashes in the wish are escaped so the JSON stays valid. Control characters become spaces. <code>tokenURI</code> and <code>tileOf</code> revert with <code>empty spot</code> for spots nobody has laid.</p>
+      </section>
+
+      <section id="artwork">
+        <h2>The artwork</h2>
+        <p>The image is a 360 × 360 SVG generated by <code>tileSVG(id)</code>, drawn in the giver's glaze:</p>
+        <ul>
+          <li>a dark square background and a round tile disc;</li>
+          <li>an outer ring and a center boss in the glaze color;</li>
+          <li>6, 7 or 8 petals in the glaze, drawn as rotated ellipses. This is the sumaksae end-cap;</li>
+          <li>a caption at the bottom with the tile number and grid position, for example <code>#330 (10,5)</code>.</li>
+        </ul>
+        <p>The petal count is deterministic. It is <code>6 + (first byte of keccak256(abi.encodePacked(id, giver)) % 3)</code>, so it is 6, 7 or 8. Because the original giver is part of the seed, the petal count stays the same after a transfer.</p>
+      </section>
+
+      <section id="ownership">
+        <h2>Ownership &amp; transfers</h2>
+        <ul>
+          <li>The token is <strong>CHEOMA</strong> with symbol <strong>TILE</strong>.</li>
+          <li>Tiles are standard ERC-721 tokens. The contract supports <code>transferFrom</code>, both <code>safeTransferFrom</code> overloads, <code>approve</code>, <code>setApprovalForAll</code>, <code>getApproved</code> and <code>isApprovedForAll</code>.</li>
+          <li>After a transfer, <code>tileOf(id).giver</code> and the original <code>TileLaid</code> event still name the first giver.</li>
+          <li>Transfers do not change the wallet cap. A wallet that has laid 16 tiles stays at 16, even if it sends them all away.</li>
+          <li>The contract supports ERC-165, ERC-721 and ERC-721 Metadata. It does not implement ERC-721 Enumerable. To list the tiles a wallet holds, use <code>balanceOf</code> with <code>Transfer</code> events, or read the roof with <code>getRange</code>.</li>
+        </ul>
+      </section>
+
+      <section id="donations">
+        <h2>Donations</h2>
+        <ul>
+          <li>Donations are optional. Attach ETH to <code>layTile</code> and it goes straight to <code>roofFund</code>.</li>
+          <li><code>roofFund</code> is set once at deploy time and cannot change. Read the current value with <code>roofFund()</code> on the <a href="https://sepolia-explorer.giwa.io">explorer</a>.</li>
+          <li>The contract keeps no ETH balance. It has no <code>receive</code> function, so a plain ETH transfer to the contract address reverts.</li>
+          <li>If the forward to <code>roofFund</code> fails, the whole lay reverts with <code>donation failed</code>, and the tile is not minted.</li>
+        </ul>
+      </section>
+
+      <section id="contract">
+        <h2>Contract reference</h2>
+        <p>Source: <a href="https://github.com/izzetcakmak/cheoma/blob/main/src/Cheoma.sol"><code>src/Cheoma.sol</code></a>. Single file, no dependencies.</p>
+
+        <h3>Functions</h3>
+        <div class="tbl">
+          <table>
+            <tr><th>Function</th><th>Kind</th><th>What it does</th></tr>
+            <tr><td><code>layTile(uint256 id, uint24 color, string wish)</code></td><td>write, payable</td><td>Lays a tile at <code>id</code>. Attach ETH to donate.</td></tr>
+            <tr><td><code>tileOf(uint256 id)</code></td><td>view</td><td>Returns <code>(giver, color, laidAt, wish)</code>. Reverts for an empty spot.</td></tr>
+            <tr><td><code>getRange(uint256 start, uint256 count)</code></td><td>view</td><td>Returns <code>givers[]</code> and <code>colors[]</code> for a span of spots. Empty spots return zero values. Reverts if the span leaves the roof.</td></tr>
+            <tr><td><code>coordinates(uint256 id)</code></td><td>pure</td><td>Returns <code>(x, y)</code> for a spot id.</td></tr>
+            <tr><td><code>tileSVG(uint256 id)</code></td><td>view</td><td>Returns the sumaksae artwork as an SVG string.</td></tr>
+            <tr><td><code>tokenURI(uint256 id)</code></td><td>view</td><td>Returns the base64 JSON metadata data URI. Reverts for an empty spot.</td></tr>
+            <tr><td><code>laidCount()</code></td><td>view</td><td>Number of tiles laid so far, from 0 to 2048.</td></tr>
+            <tr><td><code>tilesLaidBy(address)</code></td><td>view</td><td>Number of tiles this address has laid. Capped at 16.</td></tr>
+            <tr><td><code>roofFund()</code></td><td>view</td><td>Address that receives donations.</td></tr>
+            <tr><td><code>ownerOf</code>, <code>balanceOf</code>, <code>approve</code>, <code>getApproved</code>, <code>setApprovalForAll</code>, <code>isApprovedForAll</code>, <code>transferFrom</code>, <code>safeTransferFrom</code></td><td>ERC-721</td><td>Standard token functions. <code>ownerOf</code> reverts for an empty spot.</td></tr>
+            <tr><td><code>supportsInterface(bytes4)</code></td><td>pure</td><td>ERC-165 check for ERC-165, ERC-721 and ERC-721 Metadata.</td></tr>
+            <tr><td><code>name()</code>, <code>symbol()</code></td><td>view</td><td><code>CHEOMA</code> and <code>TILE</code>.</td></tr>
+            <tr><td><code>WIDTH</code>, <code>HEIGHT</code>, <code>TOTAL_TILES</code>, <code>MAX_PER_WALLET</code>, <code>MAX_WISH_BYTES</code>, <code>MILESTONE</code></td><td>constants</td><td>64, 32, 2048, 16, 140, 256.</td></tr>
+          </table>
+        </div>
+
+        <h3>Events</h3>
+        <div class="tbl">
+          <table>
+            <tr><th>Event</th><th>Emitted when</th></tr>
+            <tr><td><code>TileLaid(uint256 indexed id, address indexed giver, uint24 color, string wish, uint256 donation)</code></td><td>A tile is laid. This is the event the app listens to for live updates.</td></tr>
+            <tr><td><code>RoofMilestone(uint256 count)</code></td><td>The roof reaches a multiple of 256 tiles.</td></tr>
+            <tr><td><code>Transfer(address indexed from, address indexed to, uint256 indexed tokenId)</code></td><td>A tile is minted (from the zero address) or transferred.</td></tr>
+            <tr><td><code>Approval</code>, <code>ApprovalForAll</code></td><td>Approvals are set or changed.</td></tr>
+          </table>
+        </div>
+
+        <h3>Revert messages</h3>
+        <div class="tbl">
+          <table>
+            <tr><th>Message</th><th>Meaning</th></tr>
+            <tr><td><code>off the roof</code></td><td><code>id</code> is 2048 or higher.</td></tr>
+            <tr><td><code>tile taken</code></td><td>The spot is already laid.</td></tr>
+            <tr><td><code>wish too long</code></td><td>The wish is more than 140 bytes.</td></tr>
+            <tr><td><code>wallet cap</code></td><td>Your wallet has already laid 16 tiles.</td></tr>
+            <tr><td><code>donation failed</code></td><td>The ETH forward to <code>roofFund</code> was rejected.</td></tr>
+            <tr><td><code>empty spot</code></td><td>A read or transfer targeted a spot nobody has laid.</td></tr>
+            <tr><td><code>range</code></td><td><code>getRange</code> asked for spots past the end of the roof.</td></tr>
+            <tr><td><code>wrong from</code>, <code>not allowed</code>, <code>to=0</code>, <code>unsafe receiver</code></td><td>The usual ERC-721 transfer and approval checks.</td></tr>
+          </table>
+        </div>
+
+        <h3>Reading the roof from JavaScript</h3>
+        <p>This example uses ethers v6 with a human-readable ABI:</p>
+        <pre><code>import { ethers } from "ethers";
+
+const ADDRESS = "0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e";
+const abi = [
+  "function tileOf(uint256 id) view returns (tuple(address giver, uint24 color, uint64 laidAt, string wish))",
+  "function getRange(uint256 start, uint256 count) view returns (address[] givers, uint24[] colors)",
+  "function layTile(uint256 id, uint24 color, string wish) payable",
+  "event TileLaid(uint256 indexed id, address indexed giver, uint24 color, string wish, uint256 donation)"
+];
+
+const provider = new ethers.JsonRpcProvider("https://sepolia-rpc.giwa.io", 91342, { staticNetwork: true });
+const cheoma = new ethers.Contract(ADDRESS, abi, provider);
+
+const tile = await cheoma.tileOf(330);           // x = 10, y = 5
+console.log(tile.giver, tile.wish);
+
+const [givers, colors] = await cheoma.getRange(0, 64); // the first row of the roof</code></pre>
+        <p>To lay a tile, connect a signer with <code>cheoma.connect(signer)</code> and call <code>layTile(id, color, wish, { value })</code>. Read the roof in pages with <code>getRange</code>, as the app does, rather than fetching all 2,048 spots in one call.</p>
+      </section>
+
+      <section id="developers">
+        <h2>Developer guide</h2>
+
+        <h3>Repository layout</h3>
+        <div class="tbl">
+          <table>
+            <tr><th>Path</th><th>What it is</th></tr>
+            <tr><td><code>src/Cheoma.sol</code></td><td>The whole contract. No external dependencies.</td></tr>
+            <tr><td><code>test/Cheoma.t.sol</code></td><td>Foundry test suite (14 tests).</td></tr>
+            <tr><td><code>script/Deploy.s.sol</code></td><td>Deployment script for GIWA Sepolia.</td></tr>
+            <tr><td><code>broadcast/</code></td><td>Deployment records from Foundry.</td></tr>
+            <tr><td><code>docs/</code></td><td>The static site: the app (<code>index.html</code>), this page, the deck, the one-pager and the team page.</td></tr>
+            <tr><td><code>foundry.toml</code>, <code>lib/forge-std</code></td><td>Foundry configuration and the forge-std submodule.</td></tr>
+          </table>
+        </div>
+
+        <h3>Run the tests</h3>
+        <p>You need <a href="https://book.getfoundry.sh/">Foundry</a>. Clone with submodules, since <code>lib/forge-std</code> is a git submodule:</p>
+        <pre><code>git clone --recursive https://github.com/izzetcakmak/cheoma
+cd cheoma
+forge test -vv</code></pre>
+        <p>If you already cloned without <code>--recursive</code>, run <code>git submodule update --init --recursive</code>.</p>
+
+        <h3>Deploy to GIWA Sepolia</h3>
+        <pre><code>export PRIVATE_KEY=0x...   # deployer key. Never commit it.
+export ROOF_FUND=0x...     # optional. Defaults to the deployer address.
+
+forge script script/Deploy.s.sol --rpc-url https://sepolia-rpc.giwa.io --broadcast</code></pre>
+
+        <h3>Verify on the explorer</h3>
+        <p>Verify with the Blockscout verifier:</p>
+        <pre><code>forge verify-contract &lt;DEPLOYED_ADDRESS&gt; src/Cheoma.sol:Cheoma \
+  --verifier blockscout \
+  --verifier-url https://sepolia-explorer.giwa.io/api \
+  --chain-id 91342 \
+  --constructor-args $(cast abi-encode "constructor(address)" $ROOF_FUND)</code></pre>
+
+        <h3>Run the site locally</h3>
+        <p>The site is plain HTML, CSS and JavaScript in <code>docs/</code>. It loads ethers v6 from cdnjs, so there is no build step. Serve the folder and open it in a browser:</p>
+        <pre><code>python -m http.server 8080 --directory docs</code></pre>
+        <p>Then open <code>http://localhost:8080</code>.</p>
+
+        <h3>Hosting</h3>
+        <p>The live copy runs on Vercel. <code>docs/vercel.json</code> adds a few security headers: <code>nosniff</code>, a referrer policy and a permissions policy. Any static host works.</p>
+      </section>
+
+      <section id="faq">
+        <h2>FAQ</h2>
+
+        <h3>Do I need a wallet to look at the roof?</h3>
+        <p>No. Browsing the roof and the wish wall works without a wallet or any ETH.</p>
+
+        <h3>Do I have to donate?</h3>
+        <p>No. The donation is optional, and you can lay a tile with zero ETH attached.</p>
+
+        <h3>Can I edit or remove my wish later?</h3>
+        <p>No. The contract has no function to change or clear a wish. Write it carefully before you sign.</p>
+
+        <h3>Can I give my tile to another wallet?</h3>
+        <p>Yes. It is a standard ERC-721 transfer. The original giver stays recorded on-chain.</p>
+
+        <h3>Why can't I lay more tiles?</h3>
+        <p>Each wallet can lay up to 16 tiles in total. Transferring a tile away does not free a slot.</p>
+
+        <h3>Why does a spot say it is taken?</h3>
+        <p>Someone else laid it first. Each spot has one giver, and the first transaction to land wins.</p>
+
+        <h3>Why was my wish rejected as too long?</h3>
+        <p>The limit is 140 bytes, not characters. Korean and some accented letters take more than one byte each. The input shows the live byte count.</p>
+
+        <h3>Where does a donation go?</h3>
+        <p>It is forwarded to <code>roofFund</code> in the same transaction. The contract keeps none of it. Read <code>roofFund()</code> on the explorer for the current recipient.</p>
+
+        <h3>Which wallets work?</h3>
+        <p>Any injected EVM wallet that can use GIWA Sepolia, including GIWA Wallet and MetaMask.</p>
+      </section>
+
+      <section id="limits">
+        <h2>Limits &amp; safety</h2>
+        <ul>
+          <li><strong>Testnet only.</strong> The app runs on GIWA Sepolia. Nothing here has real-world value.</li>
+          <li><strong>Experimental.</strong> This repository does not include a security audit. Treat the contract as unaudited.</li>
+          <li><strong>Public and permanent.</strong> Wishes are public on-chain and cannot be edited or deleted. Do not write personal data, contact details or secrets.</li>
+          <li><strong>No admin controls.</strong> <code>Cheoma.sol</code> has no owner, no pause and no upgrade path. The only fixed setting is the <code>roofFund</code> address.</li>
+          <li><strong>Public RPC dependency.</strong> The app reads from public RPC endpoints. If they are unreachable, it keeps the last state it loaded.</li>
+        </ul>
+        <div class="note warn">Never put a real private key or seed phrase into the deploy commands or any file in this repo. Use a throwaway testnet key.</div>
+      </section>
+
+      <section id="roadmap">
+        <h2>Roadmap</h2>
+        <p>These are plans, not commitments. For the full pitch, see the <a href="deck.html">deck</a> and the <a href="onepager.html">one-pager</a>.</p>
+        <div class="tbl">
+          <table>
+            <tr><th>Stage</th><th>Plan</th></tr>
+            <tr><td>Now</td><td>Testnet MVP live on GIWA Sepolia, with a verified contract and the live app.</td></tr>
+            <tr><td>Next</td><td>GIWA Wallet mini-app, Dojang (EAS) badges for verified givers, and pilots with Korean temples and brands. A donated on-chain tile would mirror a physical giwa-bulsa tile.</td></tr>
+            <tr><td>Mainnet</td><td>Paid donation tiles with a small protocol fee, collab and seasonal roofs. Donations would fund Korean public goods and ecosystem grants.</td></tr>
+            <tr><td>Later</td><td>A multi-roof platform, where any community can raise its own roof.</td></tr>
+          </table>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <footer>
+    <div>CHEOMA 처마 · <a href="index.html">Live app</a> · <a href="https://github.com/izzetcakmak/cheoma" target="_blank" rel="noopener">Repo</a> · <a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e" target="_blank" rel="noopener">0xc62a…ec2e</a></div>
+    <div class="f-ko">기와 한 장, 소원 하나 · GIWA Sepolia · GASOK 2026</div>
+  </footer>
+
+</div>
+</body>
+</html>
