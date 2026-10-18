@@ -42,6 +42,9 @@
   .btn:hover{transform:translateY(-1px)}
   .btn:disabled{opacity:0.45; cursor:not-allowed; transform:none}
   .btn.ghost{background:transparent; color:var(--paper); border:1px solid rgba(232,224,208,0.25)}
+  a.btn{text-decoration:none; display:inline-flex; align-items:center}
+  .hdr-link{font-size:0.84rem; color:var(--dim); padding:6px 2px; white-space:nowrap}
+  .hdr-link:hover{color:var(--gold)}
   #walletBox{display:flex; align-items:center; gap:8px}
   #walletInfo{font-size:0.8rem; color:var(--dim); background:var(--card); border:1px solid rgba(232,224,208,0.1); border-radius:9px; padding:8px 12px; display:none}
   #walletInfo b{color:var(--gold); font-weight:600}
@@ -150,6 +153,9 @@
         <button id="lang-ko" onclick="setLang('ko')">한국어</button>
         <button id="lang-tr" onclick="setLang('tr')">TR</button>
       </div>
+      <a class="hdr-link" href="docs.html" data-i18n="linkDocs">Docs</a>
+      <a class="hdr-link" href="https://x.com/izzetcakmak35" target="_blank" rel="noopener">@izzetcakmak35</a>
+      <a class="btn ghost" href="https://izzetc.com" target="_blank" rel="noopener">dev link</a>
       <div id="walletBox">
         <div id="walletInfo"></div>
         <button class="btn" id="connectBtn" onclick="connect()" data-i18n="connect">Connect wallet</button>
@@ -168,7 +174,6 @@
     <div class="hero-links">
       <a href="https://github.com/izzetcakmak/cheoma" target="_blank" rel="noopener" data-i18n="linkGithub">GitHub repo</a>
       <a href="https://sepolia-explorer.giwa.io/address/0xc62a7cb1afbde2f2c84febd4d35fa0e023faec2e" target="_blank" rel="noopener" data-i18n="linkContract">Verified contract</a>
-      <a href="docs.html" data-i18n="linkDocs">Docs</a>
     </div>
   </section>
 
