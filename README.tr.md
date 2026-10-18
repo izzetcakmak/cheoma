@@ -27,6 +27,7 @@ Kore'deki Budist tapınaklarında yüzyıllardır süren bir gelenek vardır: **
 | **RPC** | `https://sepolia-rpc.giwa.io` (chainId `91342`) |
 | **Flashblocks RPC** | `https://sepolia-rpc-flashblocks.giwa.io` (`pending` etiketiyle ~200ms ön-onay) |
 | **Sunum / Tek sayfa / Ekip** | [deck](https://izzetcakmak.github.io/cheoma/deck.html) · [one-pager](https://izzetcakmak.github.io/cheoma/onepager.html) · [team](https://izzetcakmak.github.io/cheoma/team.html) |
+| **Dokümantasyon** | [Nasıl oynanır, kurallar, kontrat referansı, geliştirici rehberi](https://cheoma.vercel.app/docs.html) |
 
 ## Neden GIWA
 

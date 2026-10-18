@@ -27,6 +27,7 @@ At Korean Buddhist temples there is a centuries-old tradition called **giwa-buls
 | **RPC** | `https://sepolia-rpc.giwa.io` (chainId `91342`) |
 | **Flashblocks RPC** | `https://sepolia-rpc-flashblocks.giwa.io` (~200ms preconfirmations via `pending`) |
 | **Pitch deck / One-pager / Team** | [deck](https://izzetcakmak.github.io/cheoma/deck.html) · [one-pager](https://izzetcakmak.github.io/cheoma/onepager.html) · [team](https://izzetcakmak.github.io/cheoma/team.html) |
+| **Docs** | [How to play, rules, contract reference, developer guide](https://cheoma.vercel.app/docs.html) |
 
 ## Why GIWA
 
