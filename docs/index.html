@@ -87,6 +87,9 @@
   .wall-item .chip{width:26px; height:26px; border-radius:50%; flex-shrink:0; margin-top:2px; border:2px solid rgba(20,18,16,0.6); box-shadow:0 0 0 1px rgba(232,224,208,0.15)}
   .wall-item .w-wish{font-size:0.88rem; font-style:italic; word-break:break-word}
   .wall-item .w-meta{font-size:0.72rem; color:var(--dim); margin-top:4px}
+  .vbadge{display:inline-block; font-size:0.66rem; line-height:1; padding:3px 6px; border-radius:999px;
+          border:1px solid rgba(120,200,160,0.45); background:rgba(120,200,160,0.12);
+          color:#8fd3b0; letter-spacing:0.02em; vertical-align:baseline; white-space:nowrap}
   .wall-empty{grid-column:1/-1; text-align:center; color:var(--dim); font-size:0.85rem; padding:24px}
 
   /* ---------- modal ---------- */
@@ -266,6 +269,15 @@ const ABI = [
   "function tilesLaidBy(address) view returns (uint256)",
   "event TileLaid(uint256 indexed id, address indexed giver, uint24 color, string wish, uint256 donation)"
 ];
+
+/* GIWA OnchainVerifier — read-only. Laying a tile is open to everyone; a giver
+   who happens to be attested just gets a badge next to their address. */
+const VERIFIER     = "0xd5077b67dcb56caC8b270C7788FC3E6ee03F17B9";
+const VERIFIER_ABI = ["function isVerified(address addr, bytes32 attesterId) view returns (bool)"];
+const ATTESTERS = [
+  { label: "UPBIT KOREA",    id: "0xd99b42e778498aa3c9c1f6a012359130252780511687a35982e8e52735453034" },
+  { label: "TESTNET FAUCET", id: "0xaa92f8c143657dde575de430aecaea6ca91f2e6072339b16932d426895d8d678" }
+];
 const COLS = 64, ROWS = 32, TOTAL = 2048, CELL = 15, PAD = 4;
 const W = COLS * CELL + PAD * 2, H = ROWS * CELL + PAD * 2;
 const PRESETS = ["#1fb6a3","#e0523a","#d9a441","#4a6fa5","#4a7c59","#d96c2e","#8c5a9e","#e8e0d0"];
@@ -299,7 +311,8 @@ const I18N = {
     wallEmpty:"No wishes yet — be the first to lay a tile.",
     footBuilt:"Built for GASOK — GIWA MVP Build Phase",
     footChain:"fully on-chain · zero backend",
-    tile:"Tile", loading:"…"
+    tile:"Tile", loading:"…",
+    verified:"Verified", verifiedBy:"Verified onchain via GIWA OnchainVerifier"
   },
   ko: {
     tagline:"기와 한 장을 올리고, 소원을 적고, 함께 지붕을 올리세요.",
@@ -327,7 +340,8 @@ const I18N = {
     wallEmpty:"아직 소원이 없습니다 — 첫 기와를 올려 보세요.",
     footBuilt:"GASOK — GIWA MVP 빌드 단계를 위해 만들어졌습니다",
     footChain:"완전 온체인 · 백엔드 없음",
-    tile:"기와", loading:"…"
+    tile:"기와", loading:"…",
+    verified:"인증됨", verifiedBy:"GIWA OnchainVerifier로 온체인 인증됨"
   },
   tr: {
     tagline:"Bir kiremit koy. Bir dilek tut. Çatıyı birlikte yükselt.",
@@ -355,7 +369,8 @@ const I18N = {
     wallEmpty:"Henüz dilek yok — ilk kiremidi sen döşe.",
     footBuilt:"GASOK — GIWA MVP Build Phase için geliştirildi",
     footChain:"tamamen zincir üstü · sıfır backend",
-    tile:"Kiremit", loading:"…"
+    tile:"Kiremit", loading:"…",
+    verified:"Doğrulanmış", verifiedBy:"GIWA OnchainVerifier ile zincir üstünde doğrulandı"
   }
 };
 let lang = localStorage.getItem("cheoma_lang") || "en";
@@ -435,6 +450,7 @@ async function showTip(id, clientX, clientY){
   tipEl.innerHTML = "";
   const meta = document.createElement("div"); meta.className = "tt-meta";
   meta.textContent = t("tile") + " #" + id + " · " + short(tl.giver);
+  decorateVerified(meta, tl.giver);
   const wish = document.createElement("div"); wish.className = "tt-wish"; wish.textContent = t("loading");
   const date = document.createElement("div"); date.className = "tt-date";
   tipEl.appendChild(meta); tipEl.appendChild(wish); tipEl.appendChild(date);
@@ -492,6 +508,52 @@ const blockTsCache = new Map();
 function initRead(){
   readProvider = new ethers.JsonRpcProvider(RPC, 91342, { staticNetwork: true });
   readC = new ethers.Contract(CONTRACT, ABI, readProvider);
+  verifierC = new ethers.Contract(VERIFIER, VERIFIER_ABI, readProvider);
+}
+
+/* ============ onchain verification badge ============ */
+let verifierC = null;
+const verifiedCache = new Map();   // address (lowercase) -> attester label, or null
+const verifyInFlight = new Map();
+
+async function checkVerified(addr){
+  if (!verifierC || !addr) return null;
+  const key = addr.toLowerCase();
+  if (verifiedCache.has(key)) return verifiedCache.get(key);
+  if (verifyInFlight.has(key)) return verifyInFlight.get(key);
+
+  const p = (async () => {
+    try {
+      const hits = await Promise.all(ATTESTERS.map(a => verifierC.isVerified(addr, a.id)));
+      const i = hits.findIndex(Boolean);
+      const label = i === -1 ? null : ATTESTERS[i].label;
+      verifiedCache.set(key, label);
+      return label;
+    } catch (e) {
+      return null;                 // verifier unreachable: just show no badge
+    } finally {
+      verifyInFlight.delete(key);
+    }
+  })();
+  verifyInFlight.set(key, p);
+  return p;
+}
+
+function verifiedBadge(label){
+  const b = document.createElement("span");
+  b.className = "vbadge";
+  b.textContent = "✓ " + t("verified");
+  b.title = t("verifiedBy") + " · " + label;
+  return b;
+}
+
+/* Appends a badge to `el` once the lookup resolves, if `el` is still onscreen. */
+function decorateVerified(el, addr){
+  checkVerified(addr).then(label => {
+    if (!label || !el.isConnected || el.querySelector(".vbadge")) return;
+    el.appendChild(document.createTextNode(" "));
+    el.appendChild(verifiedBadge(label));
+  }).catch(() => {});
 }
 
 /* One cheap call so the headline number paints before the grid loads. */
@@ -633,6 +695,7 @@ function renderWall(items){
     wish.textContent = it.wish ? "“" + it.wish + "”" : "—";
     const meta = document.createElement("div"); meta.className = "w-meta";
     meta.textContent = t("tile") + " #" + it.id + " · " + short(it.giver);
+    decorateVerified(meta, it.giver);
     body.appendChild(wish); body.appendChild(meta);
     item.appendChild(chip); item.appendChild(body);
     wall.appendChild(item);
