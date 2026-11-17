@@ -478,29 +478,110 @@ cv.addEventListener("click", (e) => {
 document.addEventListener("click", (e) => { if (stickyTip && !cv.contains(e.target)) hideTip(); });
 
 /* ============ read / poll ============ */
+/* Boot takes one full snapshot, then every poll only asks for TileLaid logs
+   since the last seen block. A periodic snapshot self-heals any missed log. */
+const LOG_CHUNK    = 4000;   // GIWA Sepolia rejects very wide getLogs ranges (100k -> -32602)
+const MAX_CATCHUP  = 50000;  // older gap than this: a snapshot is cheaper than scanning logs
+const RESYNC_EVERY = 200;    // full snapshot every N polls (~10 min at 3s)
+
+let lastBlock = 0;
+let pollCount = 0;
+let syncing   = false;
+const blockTsCache = new Map();
+
 function initRead(){
   readProvider = new ethers.JsonRpcProvider(RPC, 91342, { staticNetwork: true });
   readC = new ethers.Contract(CONTRACT, ABI, readProvider);
 }
-async function refresh(){
+
+/* One cheap call so the headline number paints before the grid loads. */
+async function primeStats(){
   try {
-    const chunks = await Promise.all([0, 1, 2, 3].map(i => readC.getRange(i * 512, 512)));
-    let changed = false;
-    chunks.forEach((res, ci) => {
-      const givers = res[0], colors = res[1];
-      for (let j = 0; j < 512; j++){
-        const id = ci * 512 + j, g = givers[j];
-        if (g && g !== ethers.ZeroAddress){
-          const col = Number(colors[j]);
-          if (!tiles[id] || tiles[id].color !== col || tiles[id].giver !== g){
-            tiles[id] = { giver: g, color: col }; changed = true;
-          }
+    const laid = Number(await readC.laidCount());
+    document.getElementById("stLaid").textContent = laid;
+    document.getElementById("stPct").textContent  = (laid / TOTAL * 100).toFixed(1) + "%";
+  } catch (e) { /* the snapshot will fill it in */ }
+}
+
+async function snapshot(){
+  const head = await readProvider.getBlockNumber();
+  const chunks = await Promise.all(
+    [0, 1, 2, 3].map(i => readC.getRange(i * 512, 512, { blockTag: head }))
+  );
+  let changed = false;
+  chunks.forEach((res, ci) => {
+    const givers = res[0], colors = res[1];
+    for (let j = 0; j < 512; j++){
+      const id = ci * 512 + j, g = givers[j];
+      if (g && g !== ethers.ZeroAddress){
+        const col = Number(colors[j]);
+        if (!tiles[id] || tiles[id].color !== col || tiles[id].giver !== g){
+          tiles[id] = { giver: g, color: col }; changed = true;
         }
       }
-    });
+    }
+  });
+  lastBlock = head;
+  return changed;
+}
+
+async function blockTs(bn){
+  if (blockTsCache.has(bn)) return blockTsCache.get(bn);
+  const b = await readProvider.getBlock(bn);
+  const ts = b ? Number(b.timestamp) : Math.floor(Date.now() / 1000);
+  blockTsCache.set(bn, ts);
+  return ts;
+}
+
+/* The event carries the wish, so wishCache fills for free: no tileOf round trip. */
+async function syncEvents(){
+  const head = await readProvider.getBlockNumber();
+  if (head <= lastBlock) return false;
+  if (head - lastBlock > MAX_CATCHUP) return await snapshot();
+
+  const filter = readC.filters.TileLaid();
+  const fresh  = [];
+  for (let from = lastBlock + 1; from <= head; from += LOG_CHUNK){
+    const to = Math.min(from + LOG_CHUNK - 1, head);
+    const logs = await readC.queryFilter(filter, from, to);
+    for (const ev of logs) fresh.push(ev);
+  }
+
+  let changed = false;
+  for (const ev of fresh){
+    const id  = Number(ev.args.id);
+    const col = Number(ev.args.color);
+    const g   = ev.args.giver;
+    if (!tiles[id] || tiles[id].color !== col || tiles[id].giver !== g){
+      tiles[id] = { giver: g, color: col }; changed = true;
+    }
+    if (!wishCache.has(id)){
+      try {
+        wishCache.set(id, { wish: ev.args.wish, laidAt: await blockTs(ev.blockNumber) });
+      } catch (e) { /* refreshWall picks it up via tileOf */ }
+    }
+  }
+  lastBlock = head;
+  return changed;
+}
+
+async function refresh(){
+  if (syncing) return;                 // a slow poll must not overlap the next one
+  syncing = true;
+  try {
+    const needFull = lastBlock === 0 || (pollCount % RESYNC_EVERY === 0);
+    const changed  = needFull ? await snapshot() : await syncEvents();
+    pollCount++;
     updateStats();
     if (changed) render();
-  } catch (e) { /* RPC hiccup — keep last state */ }
+  } catch (e) {
+    try {                              // one snapshot retry, else keep last state
+      if (await snapshot()) render();
+      updateStats();
+    } catch (e2) { /* RPC hiccup — keep last state */ }
+  } finally {
+    syncing = false;
+  }
   try { await refreshWall(); } catch (e) { /* ignore */ }
   try { if (account) await updateOwnCount(); } catch (e) { /* ignore */ }
 }
@@ -774,7 +855,8 @@ function toast(msg, kind, ms){
   setLang(lang);
   if (typeof ethers === "undefined"){ toast("ethers.js failed to load — read-only mode unavailable", "err", 8000); return; }
   try { initRead(); } catch (e) {}
-  refresh();
+  primeStats();              // headline number first
+  refresh();                 // grid fills in behind it
   setInterval(refresh, 3000);
   window.addEventListener("resize", () => { /* canvas scales via CSS; nothing to do */ });
 })();
